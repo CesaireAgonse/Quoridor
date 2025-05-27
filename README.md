@@ -34,7 +34,7 @@ La partie se termine lorsque **tous les pions d’un joueur sont isolés dans de
   - Exemples valides :  
     - 2 cases en haut  
     - 1 à gauche + 1 en haut  
-    - 1 à droite + 1 à droite  
+    - 1 à droite + 1 à gauche  
 - Le mouvement s’interrompt s’il est bloqué par un mur ou un bord du plateau.
 
 ### 2. **Placement de mur**
@@ -54,14 +54,14 @@ Une fois par partie, chaque joueur peut, **à la place de jouer un tour normal**
 ---
 
 ## 🏁 Fin de partie
-La partie s’arrête quand **tous les pions de tout les joueurs** sont chacun dans un territoire **entièrement fermé** (aucune sortie possible).
+La partie s’arrête quand **tous les pions de tout les joueurs** sont chacun dans un territoire **entièrement fermé sans aucun autre pions d'un autre joueur** dans ce même territoire.
 
 ---
 
 ## 🏆 Condition de victoire
 - Le joueur qui **contrôle le plus grand territoire fermé** (en nombre de cases) gagne.
 - En cas d’égalité :
-  1. Celui qui a un de ses pions enfermés la plus grand territoire l’emporte.
+  1. Celui qui a un de ses pions enfermés avec le plus grand territoire l’emporte.
   2. Sinon, partie nulle.
 
 ---
