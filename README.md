@@ -11,7 +11,10 @@ La partie se termine lorsque **tous les pions d’un joueur sont isolés dans de
 
 ## 🧩 Matériel
 - Plateau de **7×7 cases**
-- **2 pions par joueur**
+- **un ou plusieurs pions par joueur selon le nombre de joueur**:
+  -  1 pion par joueur pour une partie avec 4 joueurs
+  -  2 pions par joueur pour une partie avec 3 joueurs
+  -  4 pions par joueur pour une partie avec 2 joueurs
 - **Un** nombre de murs illimités par joueurs
 - **Un** marqueur de capacité spéciale double face par joueur
 
@@ -30,11 +33,12 @@ La partie se termine lorsque **tous les pions d’un joueur sont isolés dans de
 
 ### 1. **Déplacement**
 - Le joueur choisit **l’un de ses deux pions**.
-- Il le déplace de **2 cases**, en une ou deux directions cardinales (haut, bas, gauche, droite).
+- Il le déplace jusqu'à **2 cases**, en une ou deux directions cardinales (haut, bas, gauche, droite).
   - Exemples valides :  
-    - 2 cases en haut  
+    - 2 cases en haut
+    - 1 seule cas en haut
     - 1 à gauche + 1 en haut  
-    - 1 à droite + 1 à gauche  
+    - 1 à droite + 1 à gauche
 - Le mouvement s’interrompt s’il est bloqué par un mur ou un bord du plateau.
 
 ### 2. **Placement de mur**
@@ -47,7 +51,7 @@ La partie se termine lorsque **tous les pions d’un joueur sont isolés dans de
 ## 💥 Capacité spéciale – *Percée*
 Une fois par partie, chaque joueur peut, **à la place de jouer un tour normal** :
 - **Casser un mur adjacent** à un de ses pions,
-- Puis **le traverser** immédiatement d’une case,
+- Puis **le traverser ou non** immédiatement d’une case,
 - Cette capacité est **unique** et **non renouvelable**.
 - Le joueur retourne son marqueur de capacité spéciale pour signaler aux autres joueurs qu'il a utilisé son action.
 
@@ -68,10 +72,10 @@ La partie s’arrête quand **tous les pions de tout les joueurs** sont chacun d
 
 ## 📌 Précision sur les règles
 - Cette variante n’est pas compatible avec les règles officielles du Quoridor.
-- Les bords du plateau sont déja des murs, aucun mur ne peuvent alors être placés sur ces emplacements.
-- Un pion d'un joueur ne peut pas traverser une mur ni le pion d'un autre joueur.
-- Un pion est obligé de se déplacer si il le peut et uniquement sur des emplacements libres. Si le joueur ne veut pas bouger de pions il a la possibilité de bouger un pion dans une direction puis de revenir sur ses pas pour consommer un tour. 
-- Si le pion d'un joueur ne peut plus bouger car d'autres pions le bloque, alors il est contraint à placer un mur entre lui et le pion ou l'un des pions qui le bloque le passage.
+- Les bords du plateau sont déja des murs, aucun mur ne peuvent alors être placé sur ces emplacements.
+- Un pion d'un joueur ne peut pas traverser un mur ni le pion d'un autre joueur.
+- Un pion est obligé de se déplacer s'il le peut et uniquement sur des emplacements libres. Si le joueur ne veut pas bouger l'un de ses pions, il a la possibilité de bouger un pion dans une direction puis de revenir sur ses pas pour consommer un tour. 
+- Si le pion d'un joueur ne peut plus bouger, car d'autres pions le bloque, alors il est contraint à placer un mur entre lui et le pion ou l'un des pions qui le bloque le passage.
 
 ---
 
