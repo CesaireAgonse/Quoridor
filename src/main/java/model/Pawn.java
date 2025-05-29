@@ -1,11 +1,14 @@
 package model;
 
+import java.util.Objects;
+
 public class Pawn {
     private int id;
     private Position position;
     private final int playerId;
 
     public Pawn(int id, int playerId, Position position) {
+        Objects.requireNonNull(position, "Position cannot be null");
         this.id = id;
         this.playerId = playerId;
         this.position = position;

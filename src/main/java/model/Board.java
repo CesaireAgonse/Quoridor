@@ -7,10 +7,9 @@ import java.util.Optional;
 
 public class Board {
     public final int SIZE;
-    private Cell[][] grille;
+    private final Cell[][] grille;
     private boolean[][] horizontalWalls;
     private boolean[][] verticalWalls;
-    private boolean isStarted;
     private int pawnsOnBoard;
 
     public Board(int size){
@@ -21,8 +20,6 @@ public class Board {
         this.horizontalWalls = new boolean[SIZE][SIZE + 1];
         this.verticalWalls = new boolean[SIZE + 1][SIZE];
         this.initializeBorderWalls();
-
-        this.isStarted = false;
     }
 
     private void initializeCell(){
@@ -53,6 +50,9 @@ public class Board {
     public boolean placeHorizontalWall(Position position) {
         if (position.getX() >= 0 && position.getX() < SIZE
                 && position.getY() >= 0 && position.getY() < SIZE + 1) {
+            if (horizontalWalls[position.getX()][position.getY()]) {
+                return false; // Un mur existe déjà à cette position
+            }
             horizontalWalls[position.getX()][position.getY()] = true;
             return true;
         }
@@ -62,6 +62,9 @@ public class Board {
     public boolean placeVerticalWall(Position position) {
         if (position.getX() >= 0 && position.getX() < SIZE + 1
                 && position.getY() >= 0 && position.getY() < SIZE) {
+            if (verticalWalls[position.getX()][position.getY()]) {
+                return false; // Un mur existe déjà à cette position
+            }
             verticalWalls[position.getX()][position.getY()] = true;
             return true;
         }
@@ -85,15 +88,19 @@ public class Board {
 
     /**
      * Ajoute un pion à une poisition
-     * @param pawn
-     * @param position
+     * @param pawn pion à ajouter
+     * @param position position à laquelle le pion doit être placé
      * @return true si le pion a pu être placé, false sinon
      */
     public boolean placePawnAt(Pawn pawn, Position position){
+        if (!isPositionOnBoard(position)) {
+            throw new OutOfBoardException(position);
+        }
         var celltoModify = cellAt(position);
         if (!celltoModify.isOccuped()){
             pawn.setPosition(position);
             celltoModify.setOptionalPawn(Optional.of(pawn));
+            pawnsOnBoard++;
             return true;
         }
         return false;
@@ -101,42 +108,88 @@ public class Board {
 
     /**
      * Retire un pion à une poisition
-     * @param position
+     * @param position position du pion à retirer
      * @return Optional contenant un pion si un pion a pu être retiré, vide sinon
      */
     public Optional<Pawn> retirePawnAt(Position position){
         var celltoModify = cellAt(position);
-        var pawn = celltoModify.getOptionalPawn();
+        var optionalPawn = celltoModify.getOptionalPawn();
+        if (optionalPawn.isPresent()) {
+            pawnsOnBoard--;
+        }
         celltoModify.setOptionalPawn(Optional.ofNullable(null));
-        return pawn;
+        return optionalPawn;
     }
 
     /**
      * Bouge un pion à poisition dans une direction
-     * @param position
-     * @param direction
+     * @param position position du pion à déplacer
+     * @param direction direction dans laquelle le pion doit être déplacé
      * @return true si le pion a pu être déplacé, flase sinon
      */
     public boolean moovePawnAt(Position position, Direction direction){
         var cellToCheck = cellAt(position);
-        if (cellToCheck.isOccuped()){
-            var nextPosition = new Position(position.getX() + direction.getDx(),
-                    position.getY() + direction.getDy());
-            try {
-                if (!cellAt(nextPosition).isOccuped()){
-                    try {
-                        var pawn = retirePawnAt(position);
-                        placePawnAt(pawn.get(), nextPosition);
-                    } catch (NoSuchElementException e){
-                        return false;
-                    }
-                    return true;
-                }
-            } catch (OutOfBoardException e){
-                return false;
-            }
+        if (!cellToCheck.isOccuped()){
+            throw new IllegalArgumentException("Aucun pion à la position " + position);
         }
-        return false;
+        var nextPosition = new Position(position.getX() + direction.getDx(),
+                position.getY() + direction.getDy());
+        if (cellAt(nextPosition).isOccuped() || isWallBetween(position, nextPosition)){
+            return false;
+        }
+        var pawn = retirePawnAt(position);
+        if (pawn.isEmpty()) {
+            throw new NoSuchElementException("Aucun pion trouvé à la position " + position);
+        }
+        placePawnAt(pawn.get(), nextPosition);
+        return true;
+    }
+
+    /**
+     * Vérifie si il existe un mur entre deux positions adjacentes
+     * @param position1 position 1
+     * @param position2 position 2
+     * @return true si un mur existe entre les deux positions, false sinon
+     */
+    public boolean isWallBetween(Position position1, Position position2) {
+        if (!isPositionOnBoard(position1) || !isPositionOnBoard(position2)) {
+            throw new OutOfBoardException(position1);
+        }
+
+        // Vérification des positions pour s'assurer qu'elles soient bien adjacentes
+        if (distanceBetween(position1, position2) != 1) {
+            throw new IllegalArgumentException("Les positions doivent être adjacentes.");
+        }
+
+        // Vérification des murs horizontaux
+        if (position1.getY() != position2.getY()) {
+            int maxY = Math.max(position1.getY(), position2.getY());
+            var newPos = new Position(position1.getX(), maxY);
+            return isHorizontalWallAt(newPos);
+        }
+
+        // Vérification des murs verticaux
+        if (position1.getX() != position2.getX()) {
+            int maxX = Math.max(position1.getX(), position2.getX());
+            var newPos = new Position(maxX, position1.getY());
+            return isVerticalWallAt(newPos);
+        }
+
+        return false; // Jamais atteint, mais pour la complétion
+    }
+
+    //TODO à mettre dans une classe utilitaire
+    /**
+     * Retourne la distance entre deux positions
+     * @param position1 position 1
+     * @param position2 position 2
+     * @return la distance entre les deux positions
+     */
+    public int distanceBetween(Position position1, Position position2) {
+        if (!isPositionOnBoard(position1) || !isPositionOnBoard(position2)) {
+            throw new OutOfBoardException(position1);
+        }
+        return Math.abs(position1.getX() - position2.getX()) + Math.abs(position1.getY() - position2.getY());
     }
 
     /**
@@ -189,7 +242,6 @@ public class Board {
 
         // Informations supplémentaires
         System.out.println("Pions sur le plateau: " + pawnsOnBoard);
-        System.out.println("Partie commencée: " + (isStarted ? "Oui" : "Non"));
     }
 
     /**
@@ -236,7 +288,7 @@ public class Board {
 
         System.out.println("Murs verticaux:");
         System.out.print("  ");
-        for (int x = 0; x < horizontalWalls.length; x++) {
+        for (int x = 0; x < verticalWalls.length; x++) {
             System.out.print(" " + x);
         }
         System.out.println();
@@ -256,17 +308,15 @@ public class Board {
         board.placeVerticalWall(new Position(3,2));
 
 
-        var pawn = new Pawn(1,1,new Position(0,0));
-        board.placePawnAt(pawn, new Position(6, 6));
+        var pawn1 = new Pawn(1,1,new Position(0,0));
+        board.placePawnAt(pawn1, new Position(2, 2));
+
+        var wall = board.isWallBetween(new Position(3, 2), new Position(2, 2));
+        System.out.println(wall);
+
         board.displayBoard();
-        /*
-        pawn = board.retirePawnAt(new Position(4,5)).get();
+        board.moovePawnAt(new Position(2,2), Direction.BAS);
         board.displayBoard();
-        board.placePawnAt(pawn, new Position(4,6));
-        board.displayBoard();
-        */
-        board.moovePawnAt(new Position(6,6), Direction.DROITE);
-        board.displayBoard();
-        //board.displayBoardCompact();
+        board.displayBoardCompact();
     }
 }
