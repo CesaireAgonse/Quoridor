@@ -34,8 +34,6 @@ public class Cell {
         setOccuped(true);
     }
 
-
-
     public String display() {
         if (optionalPawn.isPresent()){
             return optionalPawn.get().display();

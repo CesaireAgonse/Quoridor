@@ -12,7 +12,13 @@ public class Board {
     private boolean[][] verticalWalls;
     private int pawnsOnBoard;
 
+    public Board() {
+        this(7);
+    }
     public Board(int size){
+        if (size < 7) {
+            throw new IllegalArgumentException("La taille du plateau doit être supérieure ou égale à 7.");
+        }
         this.SIZE = size;
         this.grille = new Cell[size][size];
         initializeCell();
@@ -59,6 +65,18 @@ public class Board {
         return false;
     }
 
+    public boolean removeHorizontalWall(Position position) {
+        if (position.getX() >= 0 && position.getX() < SIZE
+                && position.getY() >= 0 && position.getY() < SIZE + 1) {
+            if (!horizontalWalls[position.getX()][position.getY()]) {
+                return false; // Aucun mur à cette position
+            }
+            horizontalWalls[position.getX()][position.getY()] = false;
+            return true;
+        }
+        return false;
+    }
+
     public boolean placeVerticalWall(Position position) {
         if (position.getX() >= 0 && position.getX() < SIZE + 1
                 && position.getY() >= 0 && position.getY() < SIZE) {
@@ -66,6 +84,18 @@ public class Board {
                 return false; // Un mur existe déjà à cette position
             }
             verticalWalls[position.getX()][position.getY()] = true;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean removeVerticalWall(Position position) {
+        if (position.getX() >= 0 && position.getX() < SIZE + 1
+                && position.getY() >= 0 && position.getY() < SIZE) {
+            if (!verticalWalls[position.getX()][position.getY()]) {
+                return false; // Aucun mur à cette position
+            }
+            verticalWalls[position.getX()][position.getY()] = false;
             return true;
         }
         return false;
@@ -79,7 +109,7 @@ public class Board {
         return verticalWalls[position.getX()][position.getY()];
     }
 
-    private Cell cellAt(Position position){
+    public Cell getCellAt(Position position){
         if (!isPositionOnBoard(position)){
             throw new OutOfBoardException(position);
         }
@@ -96,7 +126,7 @@ public class Board {
         if (!isPositionOnBoard(position)) {
             throw new OutOfBoardException(position);
         }
-        var celltoModify = cellAt(position);
+        var celltoModify = getCellAt(position);
         if (!celltoModify.isOccuped()){
             pawn.setPosition(position);
             celltoModify.setOptionalPawn(Optional.of(pawn));
@@ -111,8 +141,8 @@ public class Board {
      * @param position position du pion à retirer
      * @return Optional contenant un pion si un pion a pu être retiré, vide sinon
      */
-    public Optional<Pawn> retirePawnAt(Position position){
-        var celltoModify = cellAt(position);
+    public Optional<Pawn> removePawnAt(Position position){
+        var celltoModify = getCellAt(position);
         var optionalPawn = celltoModify.getOptionalPawn();
         if (optionalPawn.isPresent()) {
             pawnsOnBoard--;
@@ -127,21 +157,28 @@ public class Board {
      * @param direction direction dans laquelle le pion doit être déplacé
      * @return true si le pion a pu être déplacé, flase sinon
      */
-    public boolean moovePawnAt(Position position, Direction direction){
-        var cellToCheck = cellAt(position);
+    public boolean movePawnAt(Position position, Direction direction){
+        var cellToCheck = getCellAt(position);
         if (!cellToCheck.isOccuped()){
             throw new IllegalArgumentException("Aucun pion à la position " + position);
         }
-        var nextPosition = new Position(position.getX() + direction.getDx(),
-                position.getY() + direction.getDy());
-        if (cellAt(nextPosition).isOccuped() || isWallBetween(position, nextPosition)){
-            return false;
+        try {
+            var nextPosition = new Position(position.getX() + direction.getDx(),
+                    position.getY() + direction.getDy());
+            if (getCellAt(nextPosition).isOccuped() || isWallBetween(position, nextPosition)){
+                return false;
+            }
+            var pawn = removePawnAt(position);
+            if (pawn.isEmpty()) {
+                throw new NoSuchElementException("Aucun pion trouvé à la position " + position);
+            }
+            placePawnAt(pawn.get(), nextPosition);
+        } catch (IllegalArgumentException e) {
+            throw new OutOfBoardException("Le pion à la position [" + position + "] ne peut pas être déplacé en dehors du plateau: " + direction);
+        } catch (NoSuchElementException e) {
+            throw new IllegalArgumentException("Aucun pion trouvé à la position: " + position, e);
         }
-        var pawn = retirePawnAt(position);
-        if (pawn.isEmpty()) {
-            throw new NoSuchElementException("Aucun pion trouvé à la position " + position);
-        }
-        placePawnAt(pawn.get(), nextPosition);
+
         return true;
     }
 
@@ -157,7 +194,7 @@ public class Board {
         }
 
         // Vérification des positions pour s'assurer qu'elles soient bien adjacentes
-        if (distanceBetween(position1, position2) != 1) {
+        if (position1.distanceTo(position2) != 1) {
             throw new IllegalArgumentException("Les positions doivent être adjacentes.");
         }
 
@@ -178,19 +215,6 @@ public class Board {
         return false; // Jamais atteint, mais pour la complétion
     }
 
-    //TODO à mettre dans une classe utilitaire
-    /**
-     * Retourne la distance entre deux positions
-     * @param position1 position 1
-     * @param position2 position 2
-     * @return la distance entre les deux positions
-     */
-    public int distanceBetween(Position position1, Position position2) {
-        if (!isPositionOnBoard(position1) || !isPositionOnBoard(position2)) {
-            throw new OutOfBoardException(position1);
-        }
-        return Math.abs(position1.getX() - position2.getX()) + Math.abs(position1.getY() - position2.getY());
-    }
 
     /**
      * Affiche le plateau avec les cases et les murs
@@ -315,7 +339,7 @@ public class Board {
         System.out.println(wall);
 
         board.displayBoard();
-        board.moovePawnAt(new Position(2,2), Direction.BAS);
+        board.movePawnAt(new Position(2,2), Direction.BAS);
         board.displayBoard();
         board.displayBoardCompact();
     }

@@ -22,6 +22,16 @@ public class Pawn {
     public String display(){
         return "X";
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Pawn) {
+            Pawn other = (Pawn) obj;
+            return this.id == other.id && this.playerId == other.playerId && this.position.equals(other.position);
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
         return "Pion " + id + " - du joueur " + playerId + " " + position;
