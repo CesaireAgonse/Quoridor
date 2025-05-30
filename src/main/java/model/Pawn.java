@@ -7,6 +7,8 @@ public class Pawn {
     private Position position;
     private final int playerId;
 
+    private String displayName = "X";
+
     public Pawn(int id, int playerId, Position position) {
         Objects.requireNonNull(position, "Position cannot be null");
         this.id = id;
@@ -19,8 +21,12 @@ public class Pawn {
     public int getPlayerId() { return playerId; }
     public int getId() { return id; }
 
+    public void setDisplayName(String displayName) {
+        Objects.requireNonNull(displayName, "Display name cannot be null");
+        this.displayName = displayName;
+    }
     public String display(){
-        return "X";
+        return displayName;
     }
 
     @Override

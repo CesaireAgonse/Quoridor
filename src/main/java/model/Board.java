@@ -219,7 +219,7 @@ public class Board {
     /**
      * Affiche le plateau avec les cases et les murs
      */
-    public void displayBoard() {
+    public String displayBoard() {
         var boardDisplayed = new StringBuilder();
         boardDisplayed.append("=== Plateau avec coordonnées ===").append("\n");
 
@@ -262,10 +262,9 @@ public class Board {
                 boardDisplayed.append("┃").append("\n");
             }
         }
-        System.out.println(boardDisplayed.toString());
 
         // Informations supplémentaires
-        System.out.println("Pions sur le plateau: " + pawnsOnBoard);
+        return boardDisplayed.append("Pions sur le plateau: " + pawnsOnBoard).toString();
     }
 
     /**

@@ -1,25 +1,20 @@
 import model.Game;
-import model.Pawn;
 import model.Player;
-import model.Position;
+import util.GameFactory;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class App {
     public static void main(String[] args) {
-        System.out.println("yo !");
-        var j1 = new Player(1, "Bob");
-        var j2 = new Player(2, "Marley");
-        //var p1 = new Pawn(1, j1.getId(), new Position(5,4));
+        System.out.println("Phase d'initialisation :");
+        //Phase d'initialisation du jeu
+        var game = GameFactory.createGameFromInput();
+        System.out.println(game);
 
-        System.out.println(j1);
-        System.out.println(j2);
+        //Phase de placement des pions
+        System.out.println("Phase de placement des pions :");
 
-        var players = new ArrayList<Player>();
-        players.add(j1);
-        players.add(j2);
-
-        var game = new Game(players);
+        //Phase de jeu
+        System.out.println("Phase de jeu !");
     }
 }
