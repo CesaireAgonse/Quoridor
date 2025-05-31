@@ -57,4 +57,9 @@ public interface Api {
      */
     int askNumberOfMoves();
 
+    /**
+     * Demande si le joueur souhaite utiliser sa capacité spéciale.
+     * @return true si le joueur souhaite utiliser sa capacité spéciale, false sinon.
+     */
+    boolean askUseCapacity();
 }

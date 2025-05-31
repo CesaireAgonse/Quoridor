@@ -4,10 +4,7 @@ import exception.OutOfBoardException;
 import model.*;
 import util.GameFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 public class ApiBash implements Api {
 
@@ -77,8 +74,13 @@ public class ApiBash implements Api {
 
             Player currentPlayer = players.get(currentPlayerIndex);
             System.out.println("C'est le tour du joueur : " + currentPlayer.getName());
+            var capacityUsedThisTurn = false;
 
-            // TODO Utilisation ou non de la capacité spéciale du joueur
+            if (players.get(currentPlayerIndex).isCapacityUsed()) {
+                System.out.println("Vous avez déjà utilisé votre capacité spéciale.");
+            } else if (askUseCapacity()) {
+                capacityUsedThisTurn = true;
+            }
 
             Pawn pawnFromPosition = null;
             boolean validPawnSelected = false;
@@ -115,13 +117,31 @@ public class ApiBash implements Api {
                     Direction direction = askDirection();
                     try {
                         moved = game.getBoard().movePawnAt(tmpPosition, direction);
+
+                        /**
+                        //colision avec un mur dans le cas ou la capacité spéciale est utilisée
+                        if (capacityUsedThisTurn && !currentPlayer.isCapacityUsed()
+                                && !moved
+                                && game.getBoard().isPositionOnBoard(tmpPosition.move(direction))) {
+                            System.out.println("Capacité spéciale utilisée !");
+                            currentPlayer.useCapacity();
+                            game.getBoard().removeWall(tmpPosition, direction);
+                            System.out.println(game.getBoard().displayBoard());
+                            continue;
+                        }
+                         */
+
                     } catch (OutOfBoardException e) {
                         System.out.println("Déplacement impossible, le pion sort du plateau. Réessayez.");
                         continue;
                     }
-                    newPosition = tmpPosition.move(direction);
-                    tmpPosition = newPosition;
+                    if (moved) {
+                        newPosition = tmpPosition.move(direction);
+                        tmpPosition = newPosition;
+                    }
                 }
+
+                System.out.println(game.getBoard().displayBoard());
             }
 
             // Demander au joueur de sélectionner une direction pour placer un mur
@@ -227,19 +247,19 @@ public class ApiBash implements Api {
     public Direction askDirection() {
         Direction direction = null;
         while (direction == null) {
-            System.out.print("Entrez la direction (N, S, E, W) : ");
+            System.out.print("Entrez la direction (Z ↑, D →, S ↓, Q ←) : ");
             String input = scanner.nextLine().trim().toUpperCase();
             switch (input) {
-                case "N":
+                case "Z":
                     direction = Direction.NORTH;
                     break;
                 case "S":
                     direction = Direction.SOUTH;
                     break;
-                case "E":
+                case "D":
                     direction = Direction.EAST;
                     break;
-                case "W":
+                case "Q":
                     direction = Direction.WEST;
                     break;
                 default:
@@ -258,7 +278,13 @@ public class ApiBash implements Api {
         int numberOfDeplacement;
         while (true) {
             System.out.print("Entrez le nombre de déplacements (0, 1 ou 2) : ");
-            numberOfDeplacement = scanner.nextInt();
+            try {
+                numberOfDeplacement = scanner.nextInt();
+            } catch (InputMismatchException e) {
+                System.out.println("Le nombre de déplacements doit être un entier.");
+                scanner.nextLine(); // Consommer la ligne invalide
+                continue;
+            }
             scanner.nextLine(); // Consommer la nouvelle ligne
             if (numberOfDeplacement >= 0 && numberOfDeplacement <= 2) {
                 break;
@@ -269,4 +295,14 @@ public class ApiBash implements Api {
         return numberOfDeplacement;
     }
 
+    /**
+     * Demande si le joueur souhaite utiliser sa capacité spéciale.
+     * @return true si le joueur souhaite utiliser sa capacité spéciale, false sinon.
+     */
+    @Override
+    public boolean askUseCapacity() {
+        System.out.print("Voulez-vous utiliser la capacité spéciale de votre joueur ? (O/N) : ");
+        String response = scanner.nextLine().trim().toUpperCase();
+        return response.equals("O");
+    }
 }
