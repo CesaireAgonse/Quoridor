@@ -118,7 +118,6 @@ public class ApiBash implements Api {
                     try {
                         moved = game.getBoard().movePawnAt(tmpPosition, direction);
 
-                        /**
                         //colision avec un mur dans le cas ou la capacité spéciale est utilisée
                         if (capacityUsedThisTurn && !currentPlayer.isCapacityUsed()
                                 && !moved
@@ -129,7 +128,6 @@ public class ApiBash implements Api {
                             System.out.println(game.getBoard().displayBoard());
                             continue;
                         }
-                         */
 
                     } catch (OutOfBoardException e) {
                         System.out.println("Déplacement impossible, le pion sort du plateau. Réessayez.");
