@@ -1,5 +1,6 @@
 package api;
 
+import model.Direction;
 import model.Game;
 import model.Position;
 
@@ -18,6 +19,12 @@ public interface Api {
      * @param game le jeu en cours modifié avec les pions placés.
      */
     Game placementPawns(Game game);
+
+    /**
+     * Joue une partie.
+     * @param game le jeu à jouer.
+     */
+    void playGame(Game game);
 
     /**
      * Demande le nombre de joueurs pour la partie.
@@ -39,8 +46,15 @@ public interface Api {
     Position askPosition();
 
     /**
-     * Joue une partie.
-     * @param game le jeu à jouer.
+     * Demande une direction
+     * @return la direction demandée sous forme d'objet Direction.
      */
-    void playGame(Game game);
+    Direction askDirection();
+
+    /**
+     * Demande le nombre de déplacements pour un pion.
+     * @return le nombre de déplacements, qui doit être compris entre 0 et 2.
+     */
+    int askNumberOfMoves();
+
 }

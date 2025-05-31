@@ -30,6 +30,27 @@ public class Position {
 
     }
 
+    /**
+     * Renvoie une nouvelle position déplacée dans la direction spécifiée.
+     * @param direction la direction dans laquelle déplacer la position
+     * @return une nouvelle position déplacée
+     */
+    public Position move(Direction direction) {
+        Objects.requireNonNull(direction, "Direction cannot be null");
+        switch (direction) {
+            case NORTH:
+                return new Position(this.x, this.y - 1);
+            case SOUTH:
+                return new Position(this.x, this.y + 1);
+            case WEST:
+                return new Position(this.x - 1, this.y);
+            case EAST:
+                return new Position(this.x + 1, this.y);
+            default:
+                throw new IllegalArgumentException("Invalid direction: " + direction);
+        }
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Position) {

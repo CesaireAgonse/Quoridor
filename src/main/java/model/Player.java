@@ -27,7 +27,7 @@ public class Player {
 
     public void initPawns() {
         for (int i = 0; i < Pawns.length; i++) {
-            Pawns[i] = new Pawn(id, i, new Position(0,0));
+            Pawns[i] = new Pawn(i, id, new Position(0,0));
             Pawns[i].setDisplayName(name.toString().substring(0, 1).toUpperCase());
         }
     }

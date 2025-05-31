@@ -27,6 +27,10 @@ public class Game {
         return board;
     }
 
+    public boolean isStarted() {
+        return isStarted;
+    }
+
     /**
      * Place le pion du joueur à la position donnée.
      * @param player

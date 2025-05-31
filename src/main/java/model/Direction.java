@@ -1,10 +1,10 @@
 package model;
 
-enum Direction {
-    HAUT(0, -1),
-    BAS(0, 1),
-    GAUCHE(-1, 0),
-    DROITE(1, 0);
+public enum Direction {
+    NORTH(0, -1),
+    SOUTH(0, 1),
+    WEST(-1, 0),
+    EAST(1, 0);
 
     private final int dx, dy;
 

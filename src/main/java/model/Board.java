@@ -49,11 +49,16 @@ public class Board {
         }
     }
 
+    /**
+     * Vérifie si une position est sur le plateau
+     * @param position position à vérifier
+     * @return true si la position est sur le plateau, false sinon
+     */
     public boolean isPositionOnBoard(Position position){
         return position.getX() >= 0 && position.getX() < SIZE && position.getY() >= 0 && position.getY() < SIZE;
     }
 
-    public boolean placeHorizontalWall(Position position) {
+    private boolean placeHorizontalWall(Position position) {
         if (position.getX() >= 0 && position.getX() < SIZE
                 && position.getY() >= 0 && position.getY() < SIZE + 1) {
             if (horizontalWalls[position.getX()][position.getY()]) {
@@ -64,8 +69,7 @@ public class Board {
         }
         return false;
     }
-
-    public boolean removeHorizontalWall(Position position) {
+    private boolean removeHorizontalWall(Position position) {
         if (position.getX() >= 0 && position.getX() < SIZE
                 && position.getY() >= 0 && position.getY() < SIZE + 1) {
             if (!horizontalWalls[position.getX()][position.getY()]) {
@@ -77,7 +81,7 @@ public class Board {
         return false;
     }
 
-    public boolean placeVerticalWall(Position position) {
+    private boolean placeVerticalWall(Position position) {
         if (position.getX() >= 0 && position.getX() < SIZE + 1
                 && position.getY() >= 0 && position.getY() < SIZE) {
             if (verticalWalls[position.getX()][position.getY()]) {
@@ -88,8 +92,7 @@ public class Board {
         }
         return false;
     }
-
-    public boolean removeVerticalWall(Position position) {
+    private boolean removeVerticalWall(Position position) {
         if (position.getX() >= 0 && position.getX() < SIZE + 1
                 && position.getY() >= 0 && position.getY() < SIZE) {
             if (!verticalWalls[position.getX()][position.getY()]) {
@@ -101,12 +104,65 @@ public class Board {
         return false;
     }
 
-    public boolean isHorizontalWallAt(Position position) {
+    private boolean isHorizontalWallAt(Position position) {
         return horizontalWalls[position.getX()][position.getY()];
     }
-
-    public boolean isVerticalWallAt(Position position) {
+    private boolean isVerticalWallAt(Position position) {
         return verticalWalls[position.getX()][position.getY()];
+    }
+
+    public boolean placeWall(Position position, Direction direction) {
+        switch (direction){
+            case NORTH -> {
+                return placeHorizontalWall(new Position(position.getX(), position.getY()));
+            }
+            case SOUTH -> {
+                return placeHorizontalWall(new Position(position.getX(), position.getY() + 1));
+            }
+            case EAST -> {
+                return placeVerticalWall(new Position(position.getX() + 1, position.getY()));
+            }
+            case WEST -> {
+                return placeVerticalWall(new Position(position.getX(), position.getY()));
+            }
+            default -> {
+                throw new IllegalArgumentException("Direction invalide: " + direction);
+            }
+        }
+    }
+    public boolean removeWall(Position position, Direction direction) {
+        switch (direction){
+            case NORTH -> {
+                return removeHorizontalWall(new Position(position.getX(), position.getY()));
+            }
+            case SOUTH -> {
+                return removeHorizontalWall(new Position(position.getX(), position.getY() + 1));
+            }
+            case EAST -> {
+                return removeVerticalWall(new Position(position.getX() + 1, position.getY()));
+            }
+            case WEST -> {
+                return removeVerticalWall(new Position(position.getX(), position.getY()));
+            }
+            default -> {
+                throw new IllegalArgumentException("Direction invalide: " + direction);
+            }
+        }
+    }
+
+    public boolean isWallAt(Position position, Direction direction) {
+        switch (direction) {
+            case NORTH:
+                return isHorizontalWallAt(new Position(position.getX(), position.getY()));
+            case SOUTH:
+                return isHorizontalWallAt(new Position(position.getX(), position.getY() + 1));
+            case EAST:
+                return isVerticalWallAt(new Position(position.getX() + 1, position.getY()));
+            case WEST:
+                return isVerticalWallAt(new Position(position.getX(), position.getY()));
+            default:
+                throw new IllegalArgumentException("Direction invalide: " + direction);
+        }
     }
 
     public Cell getCellAt(Position position){
@@ -163,8 +219,7 @@ public class Board {
             throw new IllegalArgumentException("Aucun pion à la position " + position);
         }
         try {
-            var nextPosition = new Position(position.getX() + direction.getDx(),
-                    position.getY() + direction.getDy());
+            var nextPosition = position.move(direction);
             if (getCellAt(nextPosition).isOccuped() || isWallBetween(position, nextPosition)){
                 return false;
             }
@@ -183,7 +238,7 @@ public class Board {
     }
 
     /**
-     * Vérifie si il existe un mur entre deux positions adjacentes
+     * Vérifie s'il existe un mur entre deux positions adjacentes
      * @param position1 position 1
      * @param position2 position 2
      * @return true si un mur existe entre les deux positions, false sinon
@@ -338,7 +393,7 @@ public class Board {
         System.out.println(wall);
 
         board.displayBoard();
-        board.movePawnAt(new Position(2,2), Direction.BAS);
+        board.movePawnAt(new Position(2,2), Direction.SOUTH);
         board.displayBoard();
         board.displayBoardCompact();
     }
