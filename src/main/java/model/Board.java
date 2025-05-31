@@ -381,20 +381,5 @@ public class Board {
     }
 
     public static void main(String[] args) {
-        var board = new Board(7);
-        board.placeHorizontalWall(new Position(1,2));
-        board.placeVerticalWall(new Position(3,2));
-
-
-        var pawn1 = new Pawn(1,1,new Position(0,0));
-        board.placePawnAt(pawn1, new Position(2, 2));
-
-        var wall = board.isWallBetween(new Position(3, 2), new Position(2, 2));
-        System.out.println(wall);
-
-        board.displayBoard();
-        board.movePawnAt(new Position(2,2), Direction.SOUTH);
-        board.displayBoard();
-        board.displayBoardCompact();
     }
 }

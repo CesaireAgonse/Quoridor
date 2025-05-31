@@ -95,7 +95,6 @@ public class ApiBash implements Api {
                 }
                 if (cell.getOptionalPawn().get().getPlayerId() != currentPlayer.getId()) {
                     System.out.println("Ce n'est pas votre pion. Réessayez.");
-                    System.out.println("Pion trouvé : " + cell.getOptionalPawn().get().getPlayerId() + " vs " + currentPlayer.getId());
                     continue; // Redemander la position si le pion n'appartient pas au joueur
                 }
 
