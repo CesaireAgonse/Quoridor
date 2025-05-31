@@ -3,6 +3,7 @@ package model;
 import util.GameFactory;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class Game {
     private ArrayList<Player> players;
@@ -20,6 +21,39 @@ public class Game {
     }
     public void setPlayers(ArrayList<Player> players) {
         this.players = players;
+    }
+
+    public Board getBoard() {
+        return board;
+    }
+
+    /**
+     * Place le pion du joueur à la position donnée.
+     * @param player
+     * @param numPawn
+     * @param position
+     * @return true si le pion a été placé avec succès, false sinon.
+     */
+    public boolean PlayerPlacePawns(Player player, int numPawn, Position position) {;
+        Objects.requireNonNull(player, "Player cannot be null");
+        Objects.requireNonNull(position, "Position cannot be null");
+        if (numPawn < 0 || numPawn >= player.getPawns().length) {
+            throw new IllegalArgumentException("Invalid pawn number: " + numPawn);
+        }
+        if (!board.isPositionOnBoard(position)) {
+            return false;
+        }
+        return board.placePawnAt(player.getPawns()[numPawn], position);
+    }
+
+    /**
+     * Démarre le jeu
+     */
+    public void start(){
+        if (isStarted) {
+            throw new IllegalStateException("Game is already started");
+        }
+        isStarted = true;
     }
 
     @Override
