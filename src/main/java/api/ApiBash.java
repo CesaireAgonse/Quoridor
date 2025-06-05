@@ -90,7 +90,14 @@ public class ApiBash implements Api {
             System.out.println("Sélectionnez un pion à déplacer en indiquant sa position : ");
             while (!validPawnSelected) {
                 Position position = askPosition();
-                var cell = game.getBoard().getCellAt(position);
+                var cell = new Cell();
+                try {
+                    cell = game.getBoard().getCellAt(position);
+                } catch (OutOfBoardException e) {
+                    System.out.printf("La position est en dehors du plateau");
+                    continue;
+                }
+
                 if (!cell.isOccuped()) {
                     System.out.println("Aucun pion à cette position. Réessayez.");
                     continue; // Redemander la position si aucun pion n'est trouvé

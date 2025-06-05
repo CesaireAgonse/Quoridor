@@ -8,8 +8,8 @@ import java.util.Optional;
 public class Board {
     public final int SIZE;
     private final Cell[][] grille;
-    private boolean[][] horizontalWalls;
-    private boolean[][] verticalWalls;
+    private final boolean[][] horizontalWalls;
+    private final boolean[][] verticalWalls;
     private int pawnsOnBoard;
 
     public Board() {
