@@ -12,8 +12,7 @@ La partie se termine lorsque **tous les pions d’un joueur sont isolés dans de
 ## 🧩 Matériel
 - Plateau de **7×7 cases**
 - **un ou plusieurs pions par joueur selon le nombre de joueur**:
-  -  1 pion par joueur pour une partie avec 4 joueurs
-  -  2 pions par joueur pour une partie avec 3 joueurs
+  -  2 pions par joueur pour une partie avec 3 ou 4 joueurs
   -  4 pions par joueur pour une partie avec 2 joueurs
 - **Un** nombre de murs illimités par joueurs
 - **Un** marqueur de capacité spéciale double face par joueur

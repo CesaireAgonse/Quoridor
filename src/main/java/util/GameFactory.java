@@ -33,8 +33,7 @@ public class GameFactory {
     public static int getNumberOfPawnFromPlayer(int numberOfPlayers) {
         return switch (numberOfPlayers) {
             case 2 -> 4;
-            case 3 -> 2;
-            case 4 -> 1;
+            case 3 , 4 -> 2;
             default -> throw new IllegalStateException("Nombre de joueurs invalide : " + numberOfPlayers);
         };
     }
