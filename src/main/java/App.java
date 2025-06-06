@@ -25,7 +25,7 @@ public class App {
 
         // Création de l'API
         Api api = new ApiBash();
-        var mock = false; // Pour activer le mock, mettre à true
+        var mock = true; // Pour activer le mock, mettre à true
         Game game;
 
         if (mock) {

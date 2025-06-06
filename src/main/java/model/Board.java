@@ -2,6 +2,7 @@ package model;
 
 import exception.OutOfBoardException;
 
+import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -31,7 +32,7 @@ public class Board {
     private void initializeCell(){
         for (int x = 0; x < SIZE; x++) {
             for (int y = 0; y < SIZE; y++) {
-                grille[x][y] = new Cell();
+                grille[x][y] = new Cell(new Position(x, y));
             }
         }
     }
@@ -237,6 +238,17 @@ public class Board {
         return true;
     }
 
+    public boolean isPawnCanMove(Pawn pawn){
+        var position = pawn.getPosition();
+        var wallNumber = 0;
+        for (var direction : Direction.values()){
+            if (isWallAt(position, direction)){
+                wallNumber++;
+            };
+        }
+        return wallNumber < 4;
+    }
+
     /**
      * Vérifie s'il existe un mur entre deux positions adjacentes
      * @param position1 position 1
@@ -270,6 +282,26 @@ public class Board {
         return false; // Jamais atteint, mais pour la complétion
     }
 
+    /**
+     * Récupère toute une zone fermé à partir d'une position
+     * @param position La position servant de point de départ
+     * @return une zone fermé représenté par des cases de la grille
+     */
+    public HashSet<Cell> getAreaFromPosition(Position position, HashSet<Cell> cells){
+        cells.add(getCellAt(position));
+        System.out.println(cells);
+        for (var direction : Direction.values()){
+            Position nextPosition;
+            if (!isWallAt(position, direction)){
+                nextPosition = position.move(direction);
+                if (!cells.contains(getCellAt(nextPosition))){
+                    cells.addAll(getAreaFromPosition(nextPosition, cells));
+                }
+            }
+        }
+
+        return cells;
+    }
 
     /**
      * Affiche le plateau avec les cases et les murs

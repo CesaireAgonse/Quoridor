@@ -73,6 +73,7 @@ public class ApiBash implements Api {
             System.out.println(game.getBoard().displayBoard());
 
             Player currentPlayer = players.get(currentPlayerIndex);
+            System.out.println("currentPlayer peut jouer ? : " + game.isPlayerCanMove(currentPlayer.getId()));
             System.out.println("C'est le tour du joueur : " + currentPlayer.getName());
             var capacityUsedThisTurn = false;
 
@@ -90,7 +91,7 @@ public class ApiBash implements Api {
             System.out.println("Sélectionnez un pion à déplacer en indiquant sa position : ");
             while (!validPawnSelected) {
                 Position position = askPosition();
-                var cell = new Cell();
+                var cell = new Cell(position);
                 try {
                     cell = game.getBoard().getCellAt(position);
                 } catch (OutOfBoardException e) {

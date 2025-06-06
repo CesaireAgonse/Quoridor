@@ -1,14 +1,19 @@
 package model;
 
-import util.GameFactory;
-
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class Game {
     private ArrayList<Player> players;
     private Board board;
     private boolean isStarted;
+    private boolean isOver;
+
+    private record score(){
+
+    }
 
     public Game(ArrayList<Player> players){
         this.board = new Board();
@@ -26,6 +31,52 @@ public class Game {
 
     public boolean isStarted() {
         return isStarted;
+    }
+
+    public boolean isPlayerCanMove(int idPlayer){
+        var player = players.get(idPlayer);
+        var pawns = player.getPawns();
+
+        for (var pawn : pawns){
+            if (!board.isPawnCanMove(pawn)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean calculationOver(){
+        if (!isStarted){
+            throw new IllegalArgumentException();
+        }
+        var board = getBoard();
+        var pawns = new ArrayList<Pawn>();
+
+        //obtention des pions du plateau
+        for (var player : players){
+            for (var pawn : player.getPawns()){
+                pawns.add(pawn);
+            }
+        }
+
+
+        //Pour chaques pions sur le board on construit un ensemble de cases
+        for (var currentPawn : pawns){
+            var cellsFromPawn = new HashSet<Cell>();
+            var pawnPosition = currentPawn.getPosition();
+            var currentCell = getBoard().getCellAt(pawnPosition);
+
+            cellsFromPawn.addAll(board.getAreaFromPosition(pawnPosition, cellsFromPawn));
+
+            //lister tout les pions de l'ensemble
+        }
+
+
+        return isOver;
+    }
+
+    public boolean isGameOver() {
+        return isOver;
     }
 
     /**

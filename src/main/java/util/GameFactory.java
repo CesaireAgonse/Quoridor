@@ -24,7 +24,7 @@ public class GameFactory {
         ArrayList<Player> players = new ArrayList<>();
 
         for (int i = 0; i < numberOfPlayers; i++) {
-            Player player = new Player(i + 1, pawnsPerPlayer, playerNames.get(i));
+            Player player = new Player(i , pawnsPerPlayer, playerNames.get(i));
             players.add(player);
         }
         return new Game(players);
