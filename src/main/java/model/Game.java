@@ -17,6 +17,7 @@ public class Game {
     private record score(){
 
     }
+    private int currentPlayerIndex;
 
     public Game(ArrayList<Player> players){
         this.board = new Board();
@@ -100,6 +101,25 @@ public class Game {
 
     public boolean isGameOver() {
         return isOver;
+    }
+
+    public int getCurrentPlayerIndex() {
+        return currentPlayerIndex;
+    }
+
+    public Player getCurrentPlayer() {
+        return players.get(currentPlayerIndex);
+    }
+
+    public void nextPlayer() {
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+    }
+
+    public boolean isAllPawnArePlaced() {
+        if (board.getPawnsOnBoard() == players.size() * NUMBER_OF_PAWNS_PER_PLAYER) {
+            return true; // Tous les pions sont déjà placés
+        }
+        return false; // Tous les pions sont placés sur le plateau
     }
 
     /**

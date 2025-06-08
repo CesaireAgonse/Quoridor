@@ -55,6 +55,7 @@ public class GameWindow extends JFrame {
     }
 
     private class BoardPanel extends JPanel {
+
         private int MARGIN = 25;
         private int boardSize;
         private int cellSize;
