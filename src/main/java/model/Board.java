@@ -275,8 +275,6 @@ public class Board {
                 continue; // Ignore les positions négatives
             }
         }
-        System.out.println("Nombre de murs autour du pion: " + wallNumber);
-        System.out.println("Nombre de pions autour du pion: " + pawnNumber);
         return wallNumber < 4 || pawnNumber < 4;
     }
 
@@ -288,7 +286,6 @@ public class Board {
                 wallNumber++;
             };
         }
-        System.out.println("Nombre de murs autour du pion: " + wallNumber);
         return wallNumber < 4;
     }
 

@@ -249,14 +249,14 @@ public class GameWindow extends JFrame {
         try {
             backgroundTexture = new ImageIcon(Objects.requireNonNull(getClass().getResource("/bois.jpg")));
         } catch (Exception e) {
-            System.out.println("Impossible de charger l'image de texture: " + e.getMessage());
+            System.err.println("Impossible de charger l'image de texture: " + e.getMessage());
             backgroundTexture = null;
         }
 
         try {
             backgroundImage = new ImageIcon(getClass().getResource("/death_room.PNG"));
         } catch (Exception e) {
-            System.out.println("Impossible de charger l'image d'arrière-plan: " + e.getMessage());
+            System.err.println("Impossible de charger l'image d'arrière-plan: " + e.getMessage());
             backgroundImage = null;
         }
     }
@@ -579,7 +579,6 @@ public class GameWindow extends JFrame {
                 break;
             case MOVE_PAWN:
                 currentAction = SubPlayerAction.PLACE_WALL;
-                System.out.println("déplacé de "+ currentMovedCells);
                 break;
             case PLACE_WALL:
                 currentAction = SubPlayerAction.SELECT_PAWN;
@@ -592,25 +591,19 @@ public class GameWindow extends JFrame {
     }
 
     private String getCurrentActionMessage() {
-        switch (currentAction) {
-            case SELECT_PAWN:
-                return "Cliquez sur un de vos pions pour le sélectionner";
-            case MOVE_PAWN:
-                return "Cliquez sur une case pour déplacer le pion sélectionné";
-            case PLACE_WALL:
-                return "Cliquez pour placer un mur";
-            case DELETE_WALL:
-                return "Cliquez pour supprimer un mur";
-            default:
-                return "";
-        }
+        return switch (currentAction) {
+            case SELECT_PAWN -> "Cliquez sur un de vos pions pour le sélectionner";
+            case MOVE_PAWN -> "Cliquez sur une case pour déplacer le pion sélectionné";
+            case PLACE_WALL -> "Cliquez pour placer un mur";
+            case DELETE_WALL -> "Cliquez pour supprimer un mur";
+            default -> "";
+        };
     }
 
     private void useSpecialCapacity() {
         Player currentPlayer = game.getCurrentPlayer();
         if (!currentPlayer.isCapacityUsed()) {
             currentAction = SubPlayerAction.DELETE_WALL;
-            System.out.println("Utilisation de la capacité spéciale du joueur " + currentPlayer.getName());
             refreshWindow();
         }
     }
