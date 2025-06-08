@@ -1,5 +1,7 @@
 package api.graphic;
 
+import model.Game;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -56,26 +58,36 @@ public class MainWindow extends JFrame {
     }
     
     private void startNewGame() {
-        JOptionPane.showMessageDialog(this, "Nouvelle partie démarrée !");
         // Fermer le menu principal
         this.dispose();
 
-        // Ouvrir la fenêtre de jeu
-        new GameWindow();
+        GameSetupWindow gameSetupWindow = new GameSetupWindow();
+
+        // Attendre de façon asynchrone
+        gameSetupWindow.getGameAsync().thenAccept(gameCreated -> {
+            SwingUtilities.invokeLater(() -> {
+                if (gameCreated == null) {
+                    JOptionPane.showMessageDialog(null, "Configuration annulée ou erreur.", "Information", JOptionPane.INFORMATION_MESSAGE);
+                    new MainWindow(); // Retourner au menu principal
+                } else {
+                    JOptionPane.showMessageDialog(null, "Partie créée avec succès !", "Succès", JOptionPane.INFORMATION_MESSAGE);
+                    // Lancer la fenêtre de jeu
+                    //new GameWindow(gameCreated);
+                }
+            });
+        });
     }
+
     
     private void continueGame() {
-        JOptionPane.showMessageDialog(this, "Continuer la partie...");
+        JOptionPane.showMessageDialog(this, "C'est dans les back...");
         // TODO: Implémenter la logique de continuation
     }
     
     private void showRules() {
-        String rules = "Règles du Go :\n\n" +
-                      "1. Les joueurs placent alternativement des pierres sur les intersections\n" +
-                      "2. Le but est de contrôler le plus de territoire possible\n" +
-                      "3. Les pierres entourées sont capturées\n" +
-                      "4. La partie se termine quand les deux joueurs passent\n\n" +
-                      "Cliquez sur 'Nouvelle partie' pour commencer !";
+        String rules = "Règles du Quoridor :\n\n" +
+                      "Pour l'instant il faut check sur le readme\n" +
+                      "Cliquez sur \"Nouvelle partie\" pour commencer !";
         
         JOptionPane.showMessageDialog(this, rules, "Règles du Go", JOptionPane.INFORMATION_MESSAGE);
     }
