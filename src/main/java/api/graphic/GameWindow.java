@@ -18,10 +18,10 @@ public class GameWindow extends JFrame {
     private final Game game;
     private ImageIcon backgroundTexture;
     private ImageIcon backgroundImage;
-
     private Pawn selectedPawn = null;
-
     private SubPlayerAction currentAction = SubPlayerAction.PLACE_PAWN;
+    private int currentMovedCells = 0;
+    private JButton specialButton;
 
     public GameWindow(Game game) {
         this.game = game;
@@ -50,11 +50,11 @@ public class GameWindow extends JFrame {
         PLACE_PAWN,
         SELECT_PAWN,
         MOVE_PAWN,
-        PLACE_WALL;
+        PLACE_WALL,
+        DELETE_WALL;
     }
 
     private class BoardPanel extends JPanel {
-
         private int MARGIN = 25;
         private int boardSize;
         private int cellSize;
@@ -292,7 +292,10 @@ public class GameWindow extends JFrame {
         infoTextArea.setContentType("text/html");
         infoTextArea.setEditable(false);
         infoTextArea.setFont(new Font("Arial", Font.PLAIN, 12));
-
+        specialButton = new JButton("Utiliser capacité spéciale");
+        specialButton.addActionListener(e -> useSpecialCapacity());
+        specialButton.setVisible(false);
+        infoPanel.add(specialButton, BorderLayout.SOUTH);
         infoPanel.add(infoTextArea, BorderLayout.CENTER);
         add(infoPanel, BorderLayout.EAST);
     }
@@ -348,12 +351,20 @@ public class GameWindow extends JFrame {
     private void updateInfoDisplayGameStarted() {
         StringBuilder info = new StringBuilder();
         var currentPlayer = game.getCurrentPlayerIndex();
-        info.append("<html><body>");
-        info.append("<h2>PHASE DE JEU</h2>");
-        info.append("<h3>TOUR ACTUEL</h3>");
-        info.append("<p><font color='").append(getColorHex(currentPlayer)).append("'>");
-        info.append("Joueur ").append(currentPlayer).append(" (").append(game.getPlayers().get(currentPlayer).getName()).append(")");
-        info.append("</font></p><br>");
+        Player currentPlayerObj = game.getPlayers().get(currentPlayer);
+        specialButton.setVisible(!currentPlayerObj.isCapacityUsed() && currentAction != SubPlayerAction.SELECT_PAWN);
+        info.append("<html><head><style>");
+        info.append("body { font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 10px; }");
+        info.append("h2 { color: #333; font-size: 16px; margin: 5px 0; }");
+        info.append("h3 { color: #555; font-size: 14px; margin: 5px 0; }");
+        info.append(".current-player { font-weight: bold; font-size: 14px; }");
+        info.append(".action-message { background-color: #e8f4f8; padding: 8px; border-left: 3px solid #2196F3; margin: 10px 0; }");
+        info.append("</style></head><body>");
+        info.append("<h2>PHASE DE JEU : <font color='").append(getColorHex(currentPlayer)).append("'>");
+        info.append(game.getPlayers().get(currentPlayer).getName());
+        info.append("</font></h2>");
+        info.append("<p>");
+        info.append(getCurrentActionMessage()).append(".</p><br>");
 
         info.append("<h3>JOUEURS</h3>");
         for (int i = 0; i < game.getPlayers().size(); i++) {
@@ -425,16 +436,181 @@ public class GameWindow extends JFrame {
                     if (pawnClicked.getPlayerId() == currentPlayer.getId()) {
 
                         // Verifier si le joueur peut jouer ce pion
-                        game.getBoard().
-                        selectedPawn = pawnClicked;
-                        currentAction = SubPlayerAction.MOVE_PAWN;
+                        if (game.getBoard().isPawnCanPlaceWall(pawnClicked)){
+                            selectedPawn = pawnClicked;
+                            nextSubAction();
+                        };
 
-                        refreshWindow();
                     }
                 }
             }
-            case MOVE_PAWN -> {}
-            case PLACE_WALL -> {}
+
+            case MOVE_PAWN -> {
+                if (!cellClicked.isOccuped()){
+                    // calculer la distance de cette case par rapport au pion sélectionné
+                    if (game.getBoard().isPawnCanMoveTo(selectedPawn, clickedPosition, currentMovedCells)) {
+                        // Déplacer le pion à la nouvelle position
+                        var optionalPawn = game.getBoard().removePawnAt(selectedPawn.getPosition());
+                        if (optionalPawn.isEmpty()) {
+                            throw new IllegalStateException("Aucun pion trouvé à la position sélectionnée: " + selectedPawn.getPosition());
+                        }
+                        currentMovedCells += selectedPawn.getPosition().distanceTo(clickedPosition);
+                        if (!game.getBoard().placePawnAt(optionalPawn.get(), clickedPosition)){
+                            throw new IllegalStateException("Impossible de placer le pion à la position cliquée: " + clickedPosition);
+                        };
+                        selectedPawn.setPosition(clickedPosition);
+                        nextSubAction();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Déplacement impossible pour le pion sélectionné.", "Erreur de déplacement", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    if (cellClicked.getOptionalPawn().get().getPosition().equals(selectedPawn.getPosition())){
+                        if (game.getBoard().isPawnCanPlaceWall(selectedPawn)) {
+                            nextSubAction();
+                        } else {
+                            JOptionPane.showMessageDialog(this, "Impossible de placer un mur avec ce pion.", "Erreur de placement", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }
+            }
+
+            case PLACE_WALL -> {
+                //calculer le delta entre la position du pion sélectionné et la position cliquée
+                var currentPosition = selectedPawn.getPosition();
+                int deltaX = clickedPosition.getX() - currentPosition.getX();
+                int deltaY = clickedPosition.getY() - currentPosition.getY();
+
+                var canPlaceWall = false;
+                if (deltaX > 0){
+                    // Déplacement vers l'est
+                    if (game.getBoard().placeWall(currentPosition, Direction.EAST)) {
+                        canPlaceWall = true;
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Impossible de placer le mur à l'est.", "Erreur de placement", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else if (deltaX < 0) {
+                    // Déplacement vers l'ouest
+                    if (game.getBoard().placeWall(currentPosition, Direction.WEST)) {
+                        canPlaceWall = true;
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Impossible de placer le mur à l'ouest.", "Erreur de placement", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else if (deltaY > 0) {
+                    // Déplacement vers le sud
+                    if (game.getBoard().placeWall(currentPosition, Direction.SOUTH)) {
+                        canPlaceWall = true;
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Impossible de placer le mur au sud.", "Erreur de placement", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else if (deltaY < 0) {
+                    // Déplacement vers le nord
+                    if (game.getBoard().placeWall(currentPosition, Direction.NORTH)) {
+                        canPlaceWall = true;
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Impossible de placer le mur au nord.", "Erreur de placement", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+
+                if (canPlaceWall) {
+                    nextSubAction();
+                }
+
+            }
+
+            case DELETE_WALL -> {
+                var currentPosition = selectedPawn.getPosition();
+                int deltaX = clickedPosition.getX() - currentPosition.getX();
+                int deltaY = clickedPosition.getY() - currentPosition.getY();
+
+                var canRemoveWall = false;
+                if (deltaX > 0){
+                    // Déplacement vers l'est
+                    if (game.getBoard().removeWall(currentPosition, Direction.EAST)) {
+                        canRemoveWall = true;
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Impossible de placer le mur à l'est.", "Erreur de placement", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else if (deltaX < 0) {
+                    // Déplacement vers l'ouest
+                    if (game.getBoard().removeWall(currentPosition, Direction.WEST)) {
+                        canRemoveWall = true;
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Impossible de placer le mur à l'ouest.", "Erreur de placement", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else if (deltaY > 0) {
+                    // Déplacement vers le sud
+                    if (game.getBoard().removeWall(currentPosition, Direction.SOUTH)) {
+                        canRemoveWall = true;
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Impossible de placer le mur au sud.", "Erreur de placement", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else if (deltaY < 0) {
+                    // Déplacement vers le nord
+                    if (game.getBoard().removeWall(currentPosition, Direction.NORTH)) {
+                        canRemoveWall = true;
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Impossible de placer le mur au nord.", "Erreur de placement", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+
+                if (canRemoveWall) {
+                    currentPlayer.useCapacity();
+                }
+                nextSubAction();
+            }
+        }
+    }
+
+    private void nextSubAction() {
+        switch (currentAction) {
+            case PLACE_PAWN:
+                currentAction = SubPlayerAction.SELECT_PAWN;
+                break;
+            case SELECT_PAWN:
+                currentAction = SubPlayerAction.MOVE_PAWN;
+                break;
+            case DELETE_WALL:
+                if (currentMovedCells < 2){
+                    currentAction = SubPlayerAction.MOVE_PAWN;
+                } else {
+                    currentAction = SubPlayerAction.PLACE_WALL;
+                }
+                break;
+            case MOVE_PAWN:
+                currentAction = SubPlayerAction.PLACE_WALL;
+                System.out.println("déplacé de "+ currentMovedCells);
+                break;
+            case PLACE_WALL:
+                currentAction = SubPlayerAction.SELECT_PAWN;
+                selectedPawn = null;
+                currentMovedCells = 0;
+                game.nextPlayer();
+                break;
+        }
+        refreshWindow();
+    }
+
+    private String getCurrentActionMessage() {
+        switch (currentAction) {
+            case SELECT_PAWN:
+                return "Cliquez sur un de vos pions pour le sélectionner";
+            case MOVE_PAWN:
+                return "Cliquez sur une case pour déplacer le pion sélectionné";
+            case PLACE_WALL:
+                return "Cliquez pour placer un mur";
+            case DELETE_WALL:
+                return "Cliquez pour supprimer un mur";
+            default:
+                return "";
+        }
+    }
+
+    private void useSpecialCapacity() {
+        Player currentPlayer = game.getCurrentPlayer();
+        if (!currentPlayer.isCapacityUsed()) {
+            currentAction = SubPlayerAction.DELETE_WALL;
+            System.out.println("Utilisation de la capacité spéciale du joueur " + currentPlayer.getName());
+            refreshWindow();
         }
     }
 
@@ -448,6 +624,8 @@ public class GameWindow extends JFrame {
             var playerNames = new ArrayList<String>(2);
             playerNames.add("Alice");
             playerNames.add("Bob");
+            //playerNames.add("Charlie");
+            //playerNames.add("Diana");
             var game = GameFactory.createGame(2, playerNames);
             var gameWindow = new GameWindow(game);
         });
