@@ -245,12 +245,17 @@ public class Board {
     public boolean isPawnCanMove(Pawn pawn){
         var position = pawn.getPosition();
         var wallNumber = 0;
+        var pawnNumber = 0;
         for (var direction : Direction.values()){
             if (isWallAt(position, direction)){
                 wallNumber++;
             };
+            var nextPosition = position.move(direction);
+            if (getCellAt(nextPosition).isOccuped()) {
+                pawnNumber++;
+            }
         }
-        return wallNumber < 4;
+        return wallNumber < 4 && pawnNumber < 4;
     }
 
     /**
