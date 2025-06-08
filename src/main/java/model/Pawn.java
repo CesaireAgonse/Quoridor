@@ -6,7 +6,7 @@ public class Pawn {
     private int id;
     private Position position;
     private final int playerId;
-
+    private boolean isOnBoard = false;
     private String displayName = "X";
 
     public Pawn(int id, int playerId, Position position) {
@@ -16,8 +16,16 @@ public class Pawn {
         this.position = position;
     }
 
-    public Position getPosition() { return position; }
-    public void setPosition(Position position) { this.position = position; }
+    public Position getPosition() {
+        if (!isOnBoard) {
+            throw new IllegalStateException("Pawn is not on the board");
+        }
+        return position; }
+    public void setPosition(Position position) {
+        if (!isOnBoard) {
+            isOnBoard = true;
+        }
+        this.position = position; }
     public int getPlayerId() { return playerId; }
     public int getId() { return id; }
 

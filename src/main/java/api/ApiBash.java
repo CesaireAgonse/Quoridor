@@ -43,7 +43,7 @@ public class ApiBash implements Api {
 
                 while (!placed) {
                     Position pos = askPosition(); // méthode existante
-                    placed = game.PlayerPlacePawns(player, i, pos);
+                    placed = game.playerPlacePawns(player, i, pos);
 
                     if (!placed) {
                         System.out.println("Position invalide ou déjà occupée. Réessayez.");

@@ -28,6 +28,10 @@ public class Board {
         this.initializeBorderWalls();
     }
 
+    public int getPawnsOnBoard() {
+        return pawnsOnBoard;
+    }
+
     private void initializeCell(){
         for (int x = 0; x < SIZE; x++) {
             for (int y = 0; y < SIZE; y++) {
