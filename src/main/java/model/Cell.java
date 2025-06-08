@@ -1,14 +1,18 @@
 package model;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public class Cell {
     private boolean isOccuped;
     private Optional<Pawn> optionalPawn;
+    private final Position position;
 
-    public Cell(){
+    public Cell(Position position){
+        Objects.requireNonNull(position);
         this.isOccuped = false;
         this.optionalPawn = Optional.empty();
+        this.position = position;
     }
 
     public boolean isOccuped() {
@@ -34,6 +38,10 @@ public class Cell {
         setOccuped(true);
     }
 
+    public Position getPosition(){
+        return position;
+    }
+
     public String display() {
         if (optionalPawn.isPresent()){
             return optionalPawn.get().display();
@@ -42,10 +50,22 @@ public class Cell {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Cell){
+            Cell other = (Cell) obj;
+            return this.isOccuped == other.isOccuped
+                    && this.optionalPawn.equals(other.optionalPawn)
+                    && this.position.equals(other.position);
+        }
+        return false;
+    }
+
+    @Override
     public String toString() {
         return "Cell{" +
                 "isOccuped=" + isOccuped +
                 ", pawn=" + optionalPawn +
+                ", position=" + position +
                 '}';
     }
 }

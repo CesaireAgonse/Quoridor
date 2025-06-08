@@ -2,6 +2,7 @@ package model;
 
 import exception.OutOfBoardException;
 
+import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -28,10 +29,14 @@ public class Board {
         this.initializeBorderWalls();
     }
 
+    public int getPawnsOnBoard() {
+        return pawnsOnBoard;
+    }
+
     private void initializeCell(){
         for (int x = 0; x < SIZE; x++) {
             for (int y = 0; y < SIZE; y++) {
-                grille[x][y] = new Cell();
+                grille[x][y] = new Cell(new Position(x, y));
             }
         }
     }
@@ -238,6 +243,56 @@ public class Board {
     }
 
     /**
+     * Vérifie si un pion peut se déplacer
+     * @param pawn
+     * @return
+     */
+    public boolean isPawnCanMove(Pawn pawn){
+        var position = pawn.getPosition();
+        var wallNumber = 0;
+        var pawnNumber = 0;
+        for (var direction : Direction.values()){
+            if (isWallAt(position, direction)){
+                wallNumber++;
+            };
+
+            Position nextPosition;
+            try {
+                nextPosition = position.move(direction);
+            } catch (OutOfBoardException e) {
+                continue; // Ignore les exceptions pour les positions hors plateau
+            } catch (IllegalArgumentException e) {
+                continue; // Ignore les positions négatives
+            }
+
+            try {
+                if (getCellAt(nextPosition).isOccuped()) {
+                    pawnNumber++;
+                }
+            } catch (OutOfBoardException e) {
+                continue; // Ignore les exceptions pour les positions hors plateau
+            } catch (IllegalArgumentException e) {
+                continue; // Ignore les positions négatives
+            }
+        }
+        System.out.println("Nombre de murs autour du pion: " + wallNumber);
+        System.out.println("Nombre de pions autour du pion: " + pawnNumber);
+        return wallNumber < 4 || pawnNumber < 4;
+    }
+
+    public boolean isPawnCanPlaceWall(Pawn pawn){
+        var position = pawn.getPosition();
+        var wallNumber = 0;
+        for (var direction : Direction.values()){
+            if (isWallAt(position, direction)){
+                wallNumber++;
+            };
+        }
+        System.out.println("Nombre de murs autour du pion: " + wallNumber);
+        return wallNumber < 4;
+    }
+
+    /**
      * Vérifie s'il existe un mur entre deux positions adjacentes
      * @param position1 position 1
      * @param position2 position 2
@@ -270,6 +325,26 @@ public class Board {
         return false; // Jamais atteint, mais pour la complétion
     }
 
+    /**
+     * Récupère toute une zone fermé à partir d'une position
+     * @param position La position servant de point de départ
+     * @return une zone fermé représenté par des cases de la grille
+     */
+    public HashSet<Cell> getAreaFromPosition(Position position, HashSet<Cell> cells){
+        cells.add(getCellAt(position));
+        System.out.println(cells);
+        for (var direction : Direction.values()){
+            Position nextPosition;
+            if (!isWallAt(position, direction)){
+                nextPosition = position.move(direction);
+                if (!cells.contains(getCellAt(nextPosition))){
+                    cells.addAll(getAreaFromPosition(nextPosition, cells));
+                }
+            }
+        }
+
+        return cells;
+    }
 
     /**
      * Affiche le plateau avec les cases et les murs
@@ -381,5 +456,85 @@ public class Board {
     }
 
     public static void main(String[] args) {
+    }
+
+    public boolean isPawnCanMoveTo(Pawn selectedPawn, Position nextPosition, int alreadyMoved) {
+        if (!isPositionOnBoard(nextPosition)) {
+            return false; // La position n'est pas sur le plateau
+        }
+
+        if (alreadyMoved >= 2) {
+            return false; // Le pion ne peut pas se déplacer plus de 2 fois
+        }
+
+        var currentPosition = selectedPawn.getPosition();
+        if (currentPosition.distanceTo(nextPosition) > 2){
+            return false; // Le pion ne peut pas se déplacer de plus de 2 cases
+        }
+        //Comment aller de currentPosition à nextPosition
+        if (currentPosition.equals(nextPosition) && alreadyMoved <= 2) {
+            return true; // Le pion peut rester sur place
+        }
+        // Vérifier si le pion peut se déplacer d'une case
+        if (currentPosition.distanceTo(nextPosition) == 1 && alreadyMoved <= 1) {
+            if (getCellAt(nextPosition).isOccuped() || isWallBetween(currentPosition, nextPosition)) {
+                return false; // Il y a un mur ou un autre pion à la position suivante
+            }
+            return true; // Le pion peut se déplacer d'une case
+        }
+
+        // Vérifier si le pion peut se déplacer de deux cases
+        if (currentPosition.distanceTo(nextPosition) == 2 && alreadyMoved <= 0) {
+            int deltaX = nextPosition.getX() - currentPosition.getX();
+            int deltaY = nextPosition.getY() - currentPosition.getY();
+
+            // Cas 1: Déplacement en ligne droite (2 cases dans une direction)
+            if (deltaX == 0 || deltaY == 0) {
+                // Mouvement vertical ou horizontal de 2 cases
+                Position intermediatePosition;
+                if (deltaX == 0) {
+                    // Mouvement vertical
+                    intermediatePosition = new Position(currentPosition.getX(),
+                            currentPosition.getY() + deltaY/2);
+                } else {
+                    // Mouvement horizontal
+                    intermediatePosition = new Position(currentPosition.getX() + deltaX/2,
+                            currentPosition.getY());
+                }
+
+                // Vérifier qu'on peut aller à la position intermédiaire et à la destination
+                return !isWallBetween(currentPosition, intermediatePosition) &&
+                        !getCellAt(intermediatePosition).isOccuped() &&
+                        !isWallBetween(intermediatePosition, nextPosition) &&
+                        !getCellAt(nextPosition).isOccuped();
+            }
+
+            // Cas 2 et 3: Déplacement en L (1 case + 1 case perpendiculaire)
+            if (Math.abs(deltaX) == 1 && Math.abs(deltaY) == 1) {
+                // Chemin 1: horizontal puis vertical
+                Position path1Intermediate = new Position(currentPosition.getX() + deltaX,
+                        currentPosition.getY());
+                boolean path1Valid = !isWallBetween(currentPosition, path1Intermediate) &&
+                        !getCellAt(path1Intermediate).isOccuped() &&
+                        !isWallBetween(path1Intermediate, nextPosition) &&
+                        !getCellAt(nextPosition).isOccuped();
+
+                // Chemin 2: vertical puis horizontal
+                Position path2Intermediate = new Position(currentPosition.getX(),
+                        currentPosition.getY() + deltaY);
+                boolean path2Valid = !isWallBetween(currentPosition, path2Intermediate) &&
+                        !getCellAt(path2Intermediate).isOccuped() &&
+                        !isWallBetween(path2Intermediate, nextPosition) &&
+                        !getCellAt(nextPosition).isOccuped();
+
+                // Au moins un des deux chemins doit être valide
+                return path1Valid || path2Valid;
+            }
+
+            return false;
+        }
+
+        return false; // Le pion ne peut pas se déplacer de cette manière
+
     }
 }

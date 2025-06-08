@@ -4,6 +4,11 @@ import exception.OutOfBoardException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+
 public class BoardTest {
 
     @Test
@@ -372,4 +377,78 @@ public class BoardTest {
                 "Pawn should not be moved over a wall at " + wallPosition);
     }
 
+    @Test
+    void checkIfPawnCannotMoveWhenLocked(){
+        Board board = new Board();
+        Position initialPosition = new Position(3, 3);
+        Pawn pawn = new Pawn(1, 1, initialPosition);
+        board.placePawnAt(pawn, initialPosition);
+        board.placeWall(initialPosition,Direction.NORTH);
+        board.placeWall(initialPosition,Direction.EAST);
+        board.placeWall(initialPosition,Direction.WEST);
+
+        Assertions.assertTrue(board.isPawnCanMove(pawn));
+
+        board.placeWall(initialPosition,Direction.SOUTH);
+
+        Assertions.assertFalse(board.isPawnCanMove(pawn));
+    }
+
+    @Test
+    void checkClosedArea(){
+        Board board = new Board();
+
+        Pawn pawn1 = new Pawn(1, 1, new Position(0, 1));
+        Pawn pawn2 = new Pawn(2, 2, new Position(1, 3));
+
+        board.placePawnAt(pawn1, new Position(0,1));
+        board.placePawnAt(pawn2, new Position(1,3));
+
+        board.placeWall(new Position(0, 1), Direction.NORTH);
+        board.placeWall(new Position(0, 1), Direction.EAST);
+
+        board.placeWall(new Position(0, 2), Direction.EAST);
+
+        board.placeWall(new Position(1, 2), Direction.NORTH);
+        board.placeWall(new Position(1, 2), Direction.EAST);
+
+        board.placeWall(new Position(2, 3), Direction.NORTH);
+        board.placeWall(new Position(2, 3), Direction.EAST);
+        board.placeWall(new Position(2, 3), Direction.SOUTH);
+
+        board.placeWall(new Position(1, 3), Direction.SOUTH);
+        board.placeWall(new Position(0, 3), Direction.SOUTH);
+
+        var cells = new HashSet<Cell>();
+
+        var cell1 = new Cell(new Position(0,1));
+        cell1.setOptionalPawn(Optional.of(pawn1));
+        var cell2 = new Cell(new Position(0,2));
+        var cell3 = new Cell(new Position(1,2));
+        var cell4 = new Cell(new Position(1,3));
+        cell4.setOptionalPawn(Optional.of(pawn2));
+        var cell5 = new Cell(new Position(2,3));
+        var cell6 = new Cell(new Position(0,3));
+
+        //cells.addAll(List.of(cell1, cell2, cell3, cell4, cell5, cell6));
+        cells.add(cell1);
+        cells.add(cell2);
+        cells.add(cell3);
+        cells.add(cell4);
+        cells.add(cell5);
+        cells.add(cell6);
+        //System.out.println(board.displayBoard());
+
+        var actualSet = board.getAreaFromPosition(new Position(1,3), new HashSet<Cell>());
+        //Assertions.assertEquals(expectedSet.size(), cells.size());
+        //Assertions.assertTrue(cells.containsAll(expectedSet) && expectedSet.containsAll(cells));
+        //Assertions.assertTrue(expectedSet.equals(cells));
+        Assertions.assertTrue(actualSet.contains(cell1));
+        Assertions.assertTrue(actualSet.contains(cell2));
+        Assertions.assertTrue(actualSet.contains(cell3));
+        Assertions.assertTrue(actualSet.contains(cell4));
+        Assertions.assertTrue(actualSet.contains(cell5));
+        Assertions.assertTrue(actualSet.contains(cell6));
+        //Assertions.assertTrue(cells.containsAll(actualSet));
+    }
 }

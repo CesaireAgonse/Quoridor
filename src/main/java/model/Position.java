@@ -27,7 +27,6 @@ public class Position {
     public int distanceTo(Position other) {
         Objects.requireNonNull(other, "Other position cannot be null");
         return Math.abs(this.getX() - other.getX()) + Math.abs(this.getY() - other.getY());
-
     }
 
     /**

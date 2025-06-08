@@ -9,13 +9,13 @@ public class CellTest {
 
     @Test
     public void CellIsNotOccupiedWhenInitialized() {
-        Cell cell = new Cell();
+        Cell cell = new Cell(new Position(1, 1));
         Assertions.assertFalse(cell.isOccuped(), "Cell should not be occupied when initialized");
         Assertions.assertTrue(cell.getOptionalPawn().isEmpty(), "Cell should not contain a pawn when initialized");
     }
     @Test
     void CellIsCoccupedWhenPawnIsSet() {
-        Cell cell = new Cell();
+        Cell cell = new Cell(new Position(0, 0));
         Pawn pawn = new Pawn(1, 1, new Position(0, 0));
         cell.setOptionalPawn(Optional.of(pawn));
 
@@ -26,7 +26,7 @@ public class CellTest {
 
     @Test
     void CellIsNotOccupedWhenPawnIsRemoved() {
-        Cell cell = new Cell();
+        Cell cell = new Cell(new Position(0,0));
         Pawn pawn = new Pawn(1, 1, new Position(0, 0));
         cell.setOptionalPawn(Optional.of(pawn));
 
