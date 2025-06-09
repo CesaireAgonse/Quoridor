@@ -2,6 +2,14 @@
 
 Le jeu de plateau vue dans la série "À l'épreuve du diable" sur Netflix
 
+## 🎮 Lancer le jeu
+Placez-vous dans le dossier `Release` et choisissez le numéro de version ou bien la dernière :
+```bash
+java -jar Quoridor-v1.0.0.jar
+# ou
+java -jar Quoridor-latest.jar
+```
+
 ## 🎯 Objectif
 Cette variante du Quoridor oppose de 2 à 4 joueurs dans une conquête stratégique de territoire.  
 Le but est de **contrôler la plus grande zone fermée** sur le plateau.  
