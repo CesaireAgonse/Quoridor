@@ -59,7 +59,7 @@ public class MainWindow extends JFrame {
     
     private void startNewGame() {
         // Fermer le menu principal
-        this.dispose();
+        this.setVisible(false);
 
         GameSetupWindow gameSetupWindow = new GameSetupWindow();
 
@@ -70,9 +70,8 @@ public class MainWindow extends JFrame {
                     JOptionPane.showMessageDialog(null, "Configuration annulée ou erreur.", "Information", JOptionPane.INFORMATION_MESSAGE);
                     new MainWindow(); // Retourner au menu principal
                 } else {
-                    JOptionPane.showMessageDialog(null, "Partie créée avec succès !", "Succès", JOptionPane.INFORMATION_MESSAGE);
                     // Lancer la fenêtre de jeu
-                    //new GameWindow(gameCreated);
+                    new GameWindow(gameCreated, this);
                 }
             });
         });
@@ -90,6 +89,11 @@ public class MainWindow extends JFrame {
                       "Cliquez sur \"Nouvelle partie\" pour commencer !";
         
         JOptionPane.showMessageDialog(this, rules, "Règles du Go", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public void showMainWindow() {
+        this.setVisible(true);
+        this.toFront(); // Mettre la fenêtre au premier plan
     }
     
     public static void main(String[] args) {

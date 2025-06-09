@@ -244,16 +244,18 @@ public class Board {
 
     /**
      * Vérifie si un pion peut se déplacer
-     * @param pawn
-     * @return
+     * @param pawn pion à vérifier
+     * @return true si le pion peut se déplacer, false sinon
      */
     public boolean isPawnCanMove(Pawn pawn){
         var position = pawn.getPosition();
         var wallNumber = 0;
         var pawnNumber = 0;
+        //compte les obstacles
         for (var direction : Direction.values()){
             if (isWallAt(position, direction)){
                 wallNumber++;
+                continue;
             };
 
             Position nextPosition;
@@ -275,9 +277,14 @@ public class Board {
                 continue; // Ignore les positions négatives
             }
         }
-        return wallNumber < 4 || pawnNumber < 4;
+        return (wallNumber + pawnNumber) < 4;
     }
 
+    /**
+     * Vérifie si un pion peut placer un mur
+     * @param pawn pion à vérifier
+     * @return true si le pion peut placer un mur, false sinon
+     */
     public boolean isPawnCanPlaceWall(Pawn pawn){
         var position = pawn.getPosition();
         var wallNumber = 0;
@@ -323,13 +330,13 @@ public class Board {
     }
 
     /**
-     * Récupère toute une zone fermé à partir d'une position
+     * Récupère toute une zone fermé à partir d'une position (récursive)
      * @param position La position servant de point de départ
+     * @param cells Un ensemble de cellules pour stocker les cellules de la zone
      * @return une zone fermé représenté par des cases de la grille
      */
     public HashSet<Cell> getAreaFromPosition(Position position, HashSet<Cell> cells){
         cells.add(getCellAt(position));
-        System.out.println(cells);
         for (var direction : Direction.values()){
             Position nextPosition;
             if (!isWallAt(position, direction)){
@@ -339,8 +346,16 @@ public class Board {
                 }
             }
         }
-
         return cells;
+    }
+
+    /**
+     * Récupère toute une zone fermé à partir d'une position (récursive)
+     * @param position La position servant de point de départ
+     * @return une zone fermé représenté par des cases de la grille
+     */
+    public HashSet<Cell> getAreaFromPosition(Position position){
+        return getAreaFromPosition(position, new HashSet<>());
     }
 
     /**
@@ -455,6 +470,13 @@ public class Board {
     public static void main(String[] args) {
     }
 
+    /**
+     * Vérifie si un pion peut se déplacer vers une position donnée
+     * @param selectedPawn le pion sélectionné
+     * @param nextPosition la position vers laquelle le pion doit se déplacer
+     * @param alreadyMoved le nombre de cases déjà déplacées par le pion
+     * @return true si le pion peut se déplacer vers la position, false sinon
+     */
     public boolean isPawnCanMoveTo(Pawn selectedPawn, Position nextPosition, int alreadyMoved) {
         if (!isPositionOnBoard(nextPosition)) {
             return false; // La position n'est pas sur le plateau

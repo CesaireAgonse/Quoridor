@@ -5,6 +5,8 @@ import util.GameFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,7 +14,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 public class GameSetupWindow extends JFrame {
-    
+    private boolean windowClosed = false;
     private JSpinner playerCountSpinner;
     private JTextField[] playerNameFields;
     private JPanel playerNamesPanel;
@@ -25,6 +27,14 @@ public class GameSetupWindow extends JFrame {
         createComponents();
         setupEventListeners();
         setVisible(true);
+
+        // Ajouter un WindowListener pour gérer la fermeture
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                handleWindowClosing();
+            }
+        });
     }
     public CompletableFuture<Game> getGameAsync() {
         return gameCompletableFuture;
@@ -36,15 +46,12 @@ public class GameSetupWindow extends JFrame {
             throw new IllegalArgumentException("Le nombre de joueurs doit être entre 2 et 4.");
         }
         Game game = GameFactory.createGame(numberOfPlayers, playerNames);
-
-        System.out.println("Partie configurée avec " + numberOfPlayers + " joueurs.");
-        System.out.println("Noms des joueurs : " + Arrays.toString(playerNames.toArray()));
         gameCompletableFuture.complete(game);
     }
 
     private void initializeWindow() {
         setTitle("Quoridor - Configuration de la partie");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setSize(400, 400);
         setLocationRelativeTo(null);
         setResizable(false);
@@ -162,7 +169,20 @@ public class GameSetupWindow extends JFrame {
         playerNamesPanel.revalidate();
         playerNamesPanel.repaint();
     }
-    
+
+    private void handleWindowClosing() {
+        // Marquer la fenêtre comme fermée
+        windowClosed = true;
+
+        // CORRECTION : Utiliser le bon CompletableFuture
+        if (!gameCompletableFuture.isDone()) {
+            gameCompletableFuture.complete(null);
+        }
+
+        // Fermer la fenêtre
+        dispose();
+    }
+
     private boolean validateInputs() {
         int playerCount = (Integer) playerCountSpinner.getValue();
         

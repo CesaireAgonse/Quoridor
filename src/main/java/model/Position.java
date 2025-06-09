@@ -51,12 +51,16 @@ public class Position {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Position) {
-            Position other = (Position) obj;
-            return this.x == other.x && this.y == other.y;
-        }
-        return false;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Position position = (Position) o;
+        return x == position.x && y == position.y;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
     }
 
     @Override

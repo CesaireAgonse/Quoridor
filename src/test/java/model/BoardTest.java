@@ -392,6 +392,11 @@ public class BoardTest {
         board.placeWall(initialPosition,Direction.SOUTH);
 
         Assertions.assertFalse(board.isPawnCanMove(pawn));
+
+        board.removeWall(initialPosition,Direction.SOUTH);
+        board.placePawnAt(new Pawn(2,2, initialPosition.move(Direction.SOUTH)), initialPosition.move(Direction.SOUTH));
+        Assertions.assertFalse(board.isPawnCanMove(pawn));
+
     }
 
     @Test
@@ -430,25 +435,16 @@ public class BoardTest {
         var cell5 = new Cell(new Position(2,3));
         var cell6 = new Cell(new Position(0,3));
 
-        //cells.addAll(List.of(cell1, cell2, cell3, cell4, cell5, cell6));
         cells.add(cell1);
         cells.add(cell2);
         cells.add(cell3);
         cells.add(cell4);
         cells.add(cell5);
         cells.add(cell6);
-        //System.out.println(board.displayBoard());
+        System.out.println(board.displayBoard());
 
-        var actualSet = board.getAreaFromPosition(new Position(1,3), new HashSet<Cell>());
-        //Assertions.assertEquals(expectedSet.size(), cells.size());
-        //Assertions.assertTrue(cells.containsAll(expectedSet) && expectedSet.containsAll(cells));
-        //Assertions.assertTrue(expectedSet.equals(cells));
-        Assertions.assertTrue(actualSet.contains(cell1));
-        Assertions.assertTrue(actualSet.contains(cell2));
-        Assertions.assertTrue(actualSet.contains(cell3));
-        Assertions.assertTrue(actualSet.contains(cell4));
-        Assertions.assertTrue(actualSet.contains(cell5));
-        Assertions.assertTrue(actualSet.contains(cell6));
-        //Assertions.assertTrue(cells.containsAll(actualSet));
+        var actualSet = board.getAreaFromPosition(new Position(1,3));
+        Assertions.assertTrue(actualSet.equals(cells));
     }
+
 }

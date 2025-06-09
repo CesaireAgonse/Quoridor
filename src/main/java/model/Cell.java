@@ -50,14 +50,16 @@ public class Cell {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Cell){
-            Cell other = (Cell) obj;
-            return this.isOccuped == other.isOccuped
-                    && this.optionalPawn.equals(other.optionalPawn)
-                    && this.position.equals(other.position);
-        }
-        return false;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Cell cell = (Cell) o;
+        return isOccuped == cell.isOccuped && Objects.equals(optionalPawn, cell.optionalPawn) && Objects.equals(position, cell.position);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(isOccuped, optionalPawn, position);
     }
 
     @Override

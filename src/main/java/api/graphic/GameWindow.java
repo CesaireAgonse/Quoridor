@@ -6,12 +6,15 @@ import util.GameFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
 public class GameWindow extends JFrame {
 
+    private MainWindow mainWindow;
     private static final Color[] PLAYER_COLORS = {Color.BLUE, Color.RED, Color.GREEN, Color.YELLOW};
     private JPanel gamePanel;
     private JEditorPane infoTextArea;
@@ -22,9 +25,11 @@ public class GameWindow extends JFrame {
     private SubPlayerAction currentAction = SubPlayerAction.PLACE_PAWN;
     private int currentMovedCells = 0;
     private JButton specialButton;
+    private JButton restartButton;
 
-    public GameWindow(Game game) {
+    public GameWindow(Game game, MainWindow mainWindow) {
         this.game = game;
+        this.mainWindow = mainWindow;
         loadTexture();
         initializeWindow();
         createGameArea();
@@ -32,6 +37,7 @@ public class GameWindow extends JFrame {
         createInfoArea();
         updateInfoDisplay();
         setVisible(true);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
 
         addComponentListener(new java.awt.event.ComponentAdapter() {
@@ -42,6 +48,13 @@ public class GameWindow extends JFrame {
                         gamePanel.repaint();
                     }
                 });
+            }
+        });
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                handleWindowClosing();
             }
         });
     }
@@ -68,7 +81,9 @@ public class GameWindow extends JFrame {
             addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
                 public void mouseClicked(java.awt.event.MouseEvent e) {
-                    handleMouseClick(e.getX(), e.getY());
+                    if (!game.isGameOver()){
+                        handleMouseClick(e.getX(), e.getY());
+                    }
                 }
             });
         }
@@ -296,6 +311,9 @@ public class GameWindow extends JFrame {
         specialButton = new JButton("Utiliser capacité spéciale");
         specialButton.addActionListener(e -> useSpecialCapacity());
         specialButton.setVisible(false);
+        restartButton = new JButton("Rejouer");
+        restartButton.addActionListener(e -> restartGame());
+        restartButton.setVisible(false);
         infoPanel.add(specialButton, BorderLayout.SOUTH);
         infoPanel.add(infoTextArea, BorderLayout.CENTER);
         add(infoPanel, BorderLayout.EAST);
@@ -325,7 +343,9 @@ public class GameWindow extends JFrame {
     private void updateInfoDisplay() {
         if (game.isStarted()) {
             updateInfoDisplayGameStarted();
-        } else {
+        } else if (game.isGameOver()){
+            updateInfoDisplayGameOver();
+        }else {
             updateInfoDisplaySetup();
         }
     }
@@ -371,7 +391,7 @@ public class GameWindow extends JFrame {
         for (int i = 0; i < game.getPlayers().size(); i++) {
             info.append("<p><font color='").append(getColorHex(i)).append("'>");
             info.append("<b>Joueur ").append(i + 1).append(" (").append(game.getPlayers().get(i).getName()).append(")</b><br>");
-            //info.append("Score: ").append(playerScores[i]).append("<br>"); // Placeholder pour le score
+            info.append("Score: ").append(game.getScores().get(game.getPlayers().get(i))).append("<br>"); // Placeholder pour le score
             info.append("Capacité spéciale: ");
             info.append(game.getPlayers().get(i).isCapacityUsed() ? "Utilisée" : "Disponible");
             info.append("</font></p>");
@@ -379,6 +399,39 @@ public class GameWindow extends JFrame {
         info.append("</body></html>");
 
         infoTextArea.setText(info.toString());
+    }
+
+    private void updateInfoDisplayGameOver() {
+        StringBuilder info = new StringBuilder();
+        switchRestartButtons();
+        info.append("<html><body>");
+        info.append("<h2>PARTIE TERMINÉE</h2>");
+        info.append("<p>Le joueur <font color='").append(getColorHex(game.getCurrentPlayerIndex())).append("'>");
+        info.append(game.getCurrentPlayer().getName()).append("</font> a gagné !</p>");
+        info.append("<h3>Scores finaux :</h3>");
+        for (int i = 0; i < game.getPlayers().size(); i++) {
+            info.append("<p><font color='").append(getColorHex(i)).append("'>");
+            info.append("Joueur ").append(i + 1).append(" (").append(game.getPlayers().get(i).getName()).append(") : ");
+            info.append(game.getScores().get(game.getPlayers().get(i))).append("</font></p>");
+        }
+        info.append("</body></html>");
+        infoTextArea.setText(info.toString());
+    }
+
+    private void switchRestartButtons() {
+        specialButton.setVisible(false);
+        Container parent = specialButton.getParent();
+        parent.remove(specialButton);
+        parent.add(restartButton, BorderLayout.SOUTH);
+        restartButton.setVisible(true);
+    }
+
+    private void switchCapacityButtons() {
+        restartButton.setVisible(false);
+        Container parent = restartButton.getParent();
+        parent.remove(restartButton);
+        parent.add(specialButton, BorderLayout.SOUTH);
+        specialButton.setVisible(true);
     }
 
     private void setupBoardDisplay(){
@@ -515,7 +568,13 @@ public class GameWindow extends JFrame {
                 if (canPlaceWall) {
                     nextSubAction();
                 }
+                if (game.isGameOver()){
+                    updateInfoDisplayGameOver();
+                    JOptionPane.showMessageDialog(this, "Le joueur " + currentPlayer.getName() + " a gagné !", "Partie terminée", JOptionPane.INFORMATION_MESSAGE);
 
+                } else {
+                    currentPlayer.useCapacity();
+                }
             }
 
             case DELETE_WALL -> {
@@ -608,6 +667,30 @@ public class GameWindow extends JFrame {
         }
     }
 
+    private void restartGame() {
+        game.reset();
+        switchCapacityButtons();
+        refreshWindow();
+    }
+
+    private void handleWindowClosing() {
+        int option = JOptionPane.showOptionDialog(
+                this,
+                "Êtes-vous sûr de vouloir quitter la partie ?",
+                "Confirmation",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                new Object[]{"Oui", "Non"},
+                "Non" // Valeur par défaut
+        );
+
+        if (option == JOptionPane.YES_OPTION) {
+            this.dispose(); // Fermer la fenêtre de jeu
+            mainWindow.showMainWindow(); // Réafficher le menu principal
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
@@ -615,13 +698,13 @@ public class GameWindow extends JFrame {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            var playerNames = new ArrayList<String>(2);
+            var playerNames = new ArrayList<String>(3);
             playerNames.add("Alice");
             playerNames.add("Bob");
-            //playerNames.add("Charlie");
+            playerNames.add("Charlie");
             //playerNames.add("Diana");
-            var game = GameFactory.createGame(2, playerNames);
-            var gameWindow = new GameWindow(game);
+            var game = GameFactory.createGame(3, playerNames);
+            var gameWindow = new GameWindow(game, new MainWindow());
         });
     }
 }

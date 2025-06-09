@@ -1,9 +1,9 @@
 package model;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import util.GameFactory;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Game {
 
@@ -12,17 +12,31 @@ public class Game {
     private Board board;
     private boolean isStarted;
     private int currentPlayerIndex;
-    private boolean isOver;
+    private boolean isOver = false;
 
-    private record score(){
-
-    }
+    private HashMap<Player,Integer> scores;
 
     public Game(ArrayList<Player> players){
         this.board = new Board();
-        this.isStarted = false;
         this.players = players;
         this.NUMBER_OF_PAWNS_PER_PLAYER = players.getFirst().getPawns().length;
+        this.scores = new HashMap<>();
+        this.scores.putAll(players.stream().collect(Collectors.toMap(player -> player, player -> 0)));
+        this.currentPlayerIndex = 0;
+        this.isStarted = false;
+    }
+
+    public void reset(){
+        var listNames = new ArrayList<String>();
+        listNames.addAll(players.stream().map(Player::getName).collect(Collectors.toList()));
+        var newGame = GameFactory.createGame(players.size(), listNames);
+        this.board = newGame.getBoard();
+        this.players = newGame.getPlayers();
+        this.scores = newGame.getScores();
+        this.scores.putAll(players.stream().collect(Collectors.toMap(player -> player, player -> 0)));
+        this.currentPlayerIndex = newGame.currentPlayerIndex;
+        this.isStarted = newGame.isStarted;
+        this.isOver = newGame.isOver;
     }
 
     public ArrayList<Player> getPlayers() {
@@ -46,7 +60,30 @@ public class Game {
     }
 
     public void nextPlayer() {
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+        if (isOver) {
+            throw new IllegalStateException("Game is over, cannot proceed to next player");
+        }
+        if (isStarted) {
+            calculationOver();
+        }
+        var nextPlayerIndex = (currentPlayerIndex + 1) % players.size();
+        if (isStarted){
+            while (!isPlayerCanPlay(nextPlayerIndex)){
+               nextPlayerIndex = processNextPlayer(nextPlayerIndex);
+            }
+        }
+        currentPlayerIndex = nextPlayerIndex;
+    }
+
+    private int processNextPlayer(int indexPlayer) {
+        return (indexPlayer + 1) % players.size();
+    }
+
+    public Player getPlayerById(int id) {
+        if (id < 0 || id >= players.size()) {
+            throw new IllegalArgumentException("Invalid player ID: " + id);
+        }
+        return players.get(id);
     }
 
     public boolean isAllPawnArePlaced() {
@@ -56,8 +93,13 @@ public class Game {
         return false; // Tous les pions sont placés sur le plateau
     }
 
+    /**
+     * Vérifie si un joueur peut bouger au moins un de ses pions.
+     * @param idPlayer l'identifiant du joueur à vérifier
+     * @return true si le joueur peut bouger au moins un de ses pions, false sinon.
+     */
     public boolean isPlayerCanMove(int idPlayer){
-        var player = players.get(idPlayer);
+        var player = getPlayerById(idPlayer);
         var pawns = player.getPawns();
 
         for (var pawn : pawns){
@@ -68,34 +110,117 @@ public class Game {
         return true;
     }
 
-    public boolean calculationOver(){
-        if (!isStarted){
-            throw new IllegalArgumentException();
-        }
-        var board = getBoard();
-        var pawns = new ArrayList<Pawn>();
+    /**
+     * Vérifie si un joueur peut joueur au moins un de ses pions. C'est-à-dire s'il peut placer un mur.
+     * @param idPlayer l'identifiant du joueur à vérifier
+     * @return true si le joueur peut bouger au moins un de ses pions, false sinon.
+     */
+    public boolean isPlayerCanPlay(int idPlayer){
+        var player = getPlayerById(idPlayer);
+        var pawns = player.getPawns();
+        var pawnCannotMove = 0;
 
+        for (var pawn : pawns){
+            if (!board.isPawnCanPlaceWall(pawn)){
+                pawnCannotMove++;
+            }
+        }
+        return pawnCannotMove < pawns.length;
+    }
+
+    public void calculationOver(){
+        if (!isStarted){
+            throw new IllegalStateException("Game has not started yet");
+        }
+
+        var processedCells = new HashSet<Cell>(); // Pour éviter les doublons
+        var playerScores = new HashMap<Player, Integer>(); // Map des scores
+
+        // Initialiser les scores à 0
+        playerScores.putAll(players.stream().collect(Collectors.toMap(player -> player, player -> 0)));
+
+        // Obtention de tous les pions du plateau
+        var allPawns = new ArrayList<Pawn>();
         //obtention des pions du plateau
         for (var player : players){
             for (var pawn : player.getPawns()){
-                pawns.add(pawn);
+                allPawns.add(pawn);
             }
         }
 
+        var zonesControlledBySinglePlayer = 0; // Compteur pour déterminer la fin de partie
+        var totalZones = 0;
 
-        //Pour chaques pions sur le board on construit un ensemble de cases
-        for (var currentPawn : pawns){
-            var cellsFromPawn = new HashSet<Cell>();
+        // Pour chaque pion sur le board, calculer sa zone
+        for (var currentPawn : allPawns){
             var pawnPosition = currentPawn.getPosition();
-            var currentCell = getBoard().getCellAt(pawnPosition);
+            var currentCell = board.getCellAt(pawnPosition);
 
-            cellsFromPawn.addAll(board.getAreaFromPosition(pawnPosition, cellsFromPawn));
+            // Éviter de recalculer une zone déjà traitée
+            if (processedCells.contains(currentCell)) {
+                continue;
+            }
 
-            //lister tout les pions de l'ensemble
+            // Obtenir toutes les cellules de la zone connectée
+            var cellsFromPawn = board.getAreaFromPosition(pawnPosition);
+
+            // Obtenir tous les pions dans cette zone groupés par joueur
+            var pawnsByPlayer = getPawnsFromCells(cellsFromPawn);
+
+            totalZones++;
+
+            // Vérifier si la zone appartient à un seul joueur
+            if (pawnsByPlayer.size() == 1) {
+                // Zone contrôlée par un seul joueur
+                var controllingPlayer = pawnsByPlayer.keySet().iterator().next();
+                var scoreToAdd = cellsFromPawn.size();
+
+                // Ajouter les points au joueur dans la map
+                playerScores.put(controllingPlayer, playerScores.get(controllingPlayer) + scoreToAdd);
+
+                zonesControlledBySinglePlayer++;
+            }
+
+            // Marquer toutes les cellules de cette zone comme traitées
+            processedCells.addAll(cellsFromPawn);
         }
 
+        this.scores = playerScores;
 
-        return isOver;
+        // La partie est terminée si toutes les zones sont contrôlées par un seul joueur chacune
+        isOver = (totalZones > 0 && zonesControlledBySinglePlayer == totalZones);
+    }
+
+    /**
+     * Trouve le joueur propriétaire d'un pion
+     */
+    private Player findPlayerByPawn(Pawn pawn) {
+        if (pawn.getPlayerId() > players.size() || pawn.getPlayerId() < 0) {
+            throw new IllegalArgumentException("Invalid player ID: " + pawn.getPlayerId());
+        }
+        return players.get(pawn.getPlayerId());
+    }
+
+    public HashMap<Player, Integer> getScores() {
+        return scores;
+    }
+
+    /**
+     * Crée une hashmap de tous les pions d'un ensemble de cellules
+     * @return une hashmap de joueurs et de leurs pions
+     */
+    private HashMap<Player, ArrayList<Pawn>> getPawnsFromCells(Set<Cell> cells){
+        HashMap<Player, ArrayList<Pawn>> pawns = new HashMap<>();
+        for (var cell : cells){
+            if (cell.isOccuped()){
+                var pawn = cell.getOptionalPawn().get();
+                var playerid = pawn.getPlayerId();
+                var player = players.get(playerid);
+                pawns.putIfAbsent(player, new ArrayList<>());
+                pawns.get(player).add(pawn);
+            }
+        }
+        return pawns;
     }
 
     public boolean isGameOver() {
