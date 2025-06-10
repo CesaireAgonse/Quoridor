@@ -373,7 +373,9 @@ public class GameWindow extends JFrame {
         StringBuilder info = new StringBuilder();
         var currentPlayer = game.getCurrentPlayerIndex();
         Player currentPlayerObj = game.getPlayers().get(currentPlayer);
-        specialButton.setVisible(!currentPlayerObj.isCapacityUsed() && currentAction != SubPlayerAction.SELECT_PAWN);
+        var isVisible = !currentPlayerObj.isCapacityUsed() &&
+                (currentAction == SubPlayerAction.MOVE_PAWN || currentAction == SubPlayerAction.PLACE_WALL);
+        specialButton.setVisible(isVisible);
         info.append("<html><head><style>");
         info.append("body { font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 10px; }");
         info.append("h2 { color: #333; font-size: 16px; margin: 5px 0; }");
@@ -571,9 +573,6 @@ public class GameWindow extends JFrame {
                 if (game.isGameOver()){
                     updateInfoDisplayGameOver();
                     JOptionPane.showMessageDialog(this, "Le joueur " + currentPlayer.getName() + " a gagné !", "Partie terminée", JOptionPane.INFORMATION_MESSAGE);
-
-                } else {
-                    currentPlayer.useCapacity();
                 }
             }
 
